@@ -1,0 +1,1991 @@
+{
+  "request" : "GetCapabilities",
+  "version" : "2.0.0",
+  "service" : "SOS",
+  "serviceIdentification" : {
+    "title" : {
+      "eng" : "52N SOS"
+    },
+    "abstract" : {
+      "eng" : "52North Sensor Observation Service - Data Access for the Sensor Web"
+    },
+    "accessConstraints" : [
+      "NONE"
+    ],
+    "fees" : "NONE",
+    "serviceType" : "OGC:SOS",
+    "profiles" : [
+      "http://www.opengis.net/extension/SOSDO/1.0/observationDeletion",
+      "http://www.opengis.net/extension/SOSDO/2.0/observationDeletion",
+      "http://www.opengis.net/spec/OMXML/1.0/conf/categoryObservation",
+      "http://www.opengis.net/spec/OMXML/1.0/conf/countObservation",
+      "http://www.opengis.net/spec/OMXML/1.0/conf/geometryObservation",
+      "http://www.opengis.net/spec/OMXML/1.0/conf/measurement",
+      "http://www.opengis.net/spec/OMXML/1.0/conf/textObservation",
+      "http://www.opengis.net/spec/OMXML/1.0/conf/truthObservation",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/categoryObservation",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/complexObservation",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/countObservation",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/geometryObservation",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/measurement",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/samplingCurve",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/samplingPoint",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/samplingSurface",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/spatialSampling",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/textObservation",
+      "http://www.opengis.net/spec/OMXML/2.0/conf/truthObservation",
+      "http://www.opengis.net/spec/SOS/1.0/conf/core",
+      "http://www.opengis.net/spec/SOS/1.0/conf/enhanced",
+      "http://www.opengis.net/spec/SOS/2.0/conf/core",
+      "http://www.opengis.net/spec/SOS/2.0/conf/daRetrieval",
+      "http://www.opengis.net/spec/SOS/2.0/conf/exi",
+      "http://www.opengis.net/spec/SOS/2.0/conf/foi",
+      "http://www.opengis.net/spec/SOS/2.0/conf/foiRetrieval",
+      "http://www.opengis.net/spec/SOS/2.0/conf/insertionCap",
+      "http://www.opengis.net/spec/SOS/2.0/conf/json",
+      "http://www.opengis.net/spec/SOS/2.0/conf/kvp-core",
+      "http://www.opengis.net/spec/SOS/2.0/conf/obsByIdRetrieval",
+      "http://www.opengis.net/spec/SOS/2.0/conf/obsInsertion",
+      "http://www.opengis.net/spec/SOS/2.0/conf/pox",
+      "http://www.opengis.net/spec/SOS/2.0/conf/rest",
+      "http://www.opengis.net/spec/SOS/2.0/conf/resultInsertion",
+      "http://www.opengis.net/spec/SOS/2.0/conf/resultRetrieval",
+      "http://www.opengis.net/spec/SOS/2.0/conf/sensorDeletion",
+      "http://www.opengis.net/spec/SOS/2.0/conf/sensorInsertion",
+      "http://www.opengis.net/spec/SOS/2.0/conf/soap",
+      "http://www.opengis.net/spec/SOS/2.0/conf/updateSensorDescription",
+      "http://www.opengis.net/spec/SWE/2.0/conf/core",
+      "http://www.opengis.net/spec/SWE/2.0/conf/general-encoding-rules",
+      "http://www.opengis.net/spec/SWE/2.0/conf/text-encoding-rules",
+      "http://www.opengis.net/spec/SWE/2.0/conf/uml-block-components",
+      "http://www.opengis.net/spec/SWE/2.0/conf/uml-record-components",
+      "http://www.opengis.net/spec/SWE/2.0/conf/uml-simple-components",
+      "http://www.opengis.net/spec/SWE/2.0/conf/uml-simple-encodings",
+      "http://www.opengis.net/spec/SWE/2.0/conf/xsd-block-components",
+      "http://www.opengis.net/spec/SWE/2.0/conf/xsd-record-components",
+      "http://www.opengis.net/spec/SWE/2.0/conf/xsd-simple-components",
+      "http://www.opengis.net/spec/SWE/2.0/conf/xsd-simple-encodings",
+      "http://www.opengis.net/spec/sosrf/1.0/conf/rf",
+      "http://www.opengis.net/spec/sosrf/1.0/conf/xml",
+      "http://www.opengis.net/spec/sossf/1.0/conf/sf",
+      "http://www.opengis.net/spec/sossf/1.0/conf/xml",
+      "http://www.opengis.net/spec/waterml/2.0/conf/uml-measurement-timeries-tvp-observation",
+      "http://www.opengis.net/spec/waterml/2.0/conf/uml-timeseries-tvp-observation",
+      "http://www.opengis.net/spec/waterml/2.0/conf/xsd-measurement-timeseries-tvp",
+      "http://www.opengis.net/spec/waterml/2.0/conf/xsd-timeseries-observation",
+      "http://www.opengis.net/spec/waterml/2.0/conf/xsd-timeseries-tvp-observation",
+      "http://www.opengis.net/spec/waterml/2.0/conf/xsd-xml-rules"
+    ],
+    "versions" : [
+      "1.0.0",
+      "2.0.0"
+    ]
+  },
+  "serviceProvider" : {
+    "name" : "52North",
+    "site" : "http://52north.org/swe",
+    "contact" : {
+      "name" : "TBA",
+      "position" : "TBA",
+      "phone" : "+49(0)251/396 371-0",
+      "address" : {
+        "deliveryPoint" : "Martin-Luther-King-Weg 24",
+        "city" : "Münster",
+        "administrativeArea" : "North Rhine-Westphalia",
+        "postalCode" : "48155",
+        "country" : "Germany",
+        "email" : "info@52north.org"
+      }
+    }
+  },
+  "operationMetadata" : {
+    "commonParameters" : {
+      "crs" : {
+        "allowedValues" : [
+          "http://www.opengis.net/def/crs/EPSG/0/31466",
+          "http://www.opengis.net/def/crs/EPSG/0/31467",
+          "http://www.opengis.net/def/crs/EPSG/0/4258",
+          "http://www.opengis.net/def/crs/EPSG/0/4326",
+          "http://www.opengis.net/def/crs/EPSG/0/4979"
+        ]
+      },
+      "language" : {
+        "allowedValues" : [
+          "eng"
+        ]
+      },
+      "service" : {
+        "allowedValues" : [
+          "SOS"
+        ]
+      },
+      "version" : {
+        "allowedValues" : [
+          "1.0.0",
+          "2.0.0"
+        ]
+      }
+    },
+    "operations" : {
+      "Batch" : {
+        "dcp" : [
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "DeleteObservation" : {
+        "parameters" : {
+          "observation" : "any"
+        },
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "DeleteResultTemplate" : {
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "DeleteSensor" : {
+        "parameters" : {
+          "procedure" : {
+            "allowedValues" : [
+              "http://www.52north.org/test/procedure/555",
+              "http://www.52north.org/test/procedure/9",
+              "ws2500",
+              "ws2500-internal",
+              "wwu-ws-kli-hsb",
+              "wxt520"
+            ]
+          }
+        },
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "DescribeSensor" : {
+        "parameters" : {
+          "procedure" : {
+            "allowedValues" : [
+              "http://www.52north.org/test/procedure/555",
+              "http://www.52north.org/test/procedure/9",
+              "ws2500",
+              "ws2500-internal",
+              "wwu-ws-kli-hsb",
+              "wxt520"
+            ]
+          },
+          "procedureDescriptionFormat" : {
+            "allowedValues" : [
+              "http://inspire.ec.europa.eu/schemas/ompr/3.0",
+              "http://www.opengis.net/sensorML/1.0.1",
+              "http://www.opengis.net/sensorml/2.0",
+              "http://www.opengis.net/waterml/2.0/observationProcess"
+            ]
+          },
+          "validTime" : "any"
+        },
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "GetCapabilities" : {
+        "parameters" : {
+          "AcceptFormats" : {
+            "allowedValues" : [
+              "application/xml"
+            ]
+          },
+          "AcceptVersions" : {
+            "allowedValues" : [
+              "1.0.0",
+              "2.0.0"
+            ]
+          },
+          "Sections" : {
+            "allowedValues" : [
+              "All",
+              "Contents",
+              "FilterCapabilities",
+              "InsertionCapabilities",
+              "OperationsMetadata",
+              "ServiceIdentification",
+              "ServiceProvider"
+            ]
+          },
+          "updateSequence" : "any"
+        },
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "GetDataAvailability" : {
+        "parameters" : {
+          "featureOfInterest" : {
+            "allowedValues" : [
+              "elv-ws2500",
+              "elv-ws2500-internal",
+              "http://www.52north.org/test/featureOfInterest/9",
+              "http://www.52north.org/test/featureOfInterest/world",
+              "vaisala-wxt520",
+              "wwu-ws-kli-hsb"
+            ]
+          },
+          "observedProperty" : {
+            "allowedValues" : [
+              "AirTemperature",
+              "AthmosphericPressure",
+              "Dewpoint",
+              "HailAccumulated",
+              "HailDuration",
+              "HailIntensity",
+              "HailPeakIntensity",
+              "Humidity",
+              "InSystemTemperature",
+              "Luminance",
+              "RainfallAccumulated",
+              "RainfallDuration",
+              "RainfallIntensity",
+              "RainfallPeakIntensity",
+              "ShortwaveRadiation",
+              "Sunshine",
+              "Visibility",
+              "WeatherCode",
+              "WeatherCodeText",
+              "WindDirection",
+              "WindDirectionAverage",
+              "WindDirectionMaximum",
+              "WindDirectionMinimum",
+              "WindDirectionText",
+              "WindMaxGust",
+              "WindSpeed",
+              "WindSpeedAverage",
+              "WindSpeedBft",
+              "WindSpeedKmh",
+              "WindSpeedMaximum",
+              "WindSpeedMinimum",
+              "WindSpeedMperSec",
+              "Windchill",
+              "http://www.52north.org/test/observableProperty/9_1",
+              "http://www.52north.org/test/observableProperty/9_2",
+              "http://www.52north.org/test/observableProperty/9_3",
+              "http://www.52north.org/test/observableProperty/9_4",
+              "http://www.52north.org/test/observableProperty/9_5",
+              "http://www.52north.org/test/observableProperty/9_6",
+              "http://www.52north.org/test/observableProperty/9_7",
+              "http://www.52north.org/test/observableProperty/9_8",
+              "http://www.52north.org/test/observableProperty/9_9"
+            ]
+          },
+          "offering" : {
+            "allowedValues" : [
+              "http://www.52north.org/test/offering/555",
+              "http://www.52north.org/test/offering/9",
+              "ws2500",
+              "ws2500-internal",
+              "wwu-ws-kli-hsb",
+              "wxt520"
+            ]
+          },
+          "procedure" : {
+            "allowedValues" : [
+              "http://www.52north.org/test/procedure/555",
+              "http://www.52north.org/test/procedure/9",
+              "ws2500",
+              "ws2500-internal",
+              "wwu-ws-kli-hsb",
+              "wxt520"
+            ]
+          },
+          "resultFilter" : "any",
+          "spatialFilter" : {
+            "min" : "51.9347763061523 7.59587907791138",
+            "max" : "51.9692611694336 7.652428150177"
+          }
+        },
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "GetFeatureOfInterest" : {
+        "parameters" : {
+          "featureOfInterest" : {
+            "allowedValues" : [
+              "elv-ws2500",
+              "elv-ws2500-internal",
+              "http://www.52north.org/test/featureOfInterest/9",
+              "http://www.52north.org/test/featureOfInterest/world",
+              "vaisala-wxt520",
+              "wwu-ws-kli-hsb"
+            ]
+          },
+          "observedProperty" : {
+            "allowedValues" : [
+              "AirTemperature",
+              "AthmosphericPressure",
+              "Dewpoint",
+              "HailAccumulated",
+              "HailDuration",
+              "HailIntensity",
+              "HailPeakIntensity",
+              "Humidity",
+              "InSystemTemperature",
+              "Luminance",
+              "RainfallAccumulated",
+              "RainfallDuration",
+              "RainfallIntensity",
+              "RainfallPeakIntensity",
+              "ShortwaveRadiation",
+              "Sunshine",
+              "Visibility",
+              "WeatherCode",
+              "WeatherCodeText",
+              "WindDirection",
+              "WindDirectionAverage",
+              "WindDirectionMaximum",
+              "WindDirectionMinimum",
+              "WindDirectionText",
+              "WindMaxGust",
+              "WindSpeed",
+              "WindSpeedAverage",
+              "WindSpeedBft",
+              "WindSpeedKmh",
+              "WindSpeedMaximum",
+              "WindSpeedMinimum",
+              "WindSpeedMperSec",
+              "Windchill",
+              "http://www.52north.org/test/observableProperty/9_1",
+              "http://www.52north.org/test/observableProperty/9_2",
+              "http://www.52north.org/test/observableProperty/9_3",
+              "http://www.52north.org/test/observableProperty/9_4",
+              "http://www.52north.org/test/observableProperty/9_5",
+              "http://www.52north.org/test/observableProperty/9_6",
+              "http://www.52north.org/test/observableProperty/9_7",
+              "http://www.52north.org/test/observableProperty/9_8",
+              "http://www.52north.org/test/observableProperty/9_9"
+            ]
+          },
+          "procedure" : {
+            "allowedValues" : [
+              "http://www.52north.org/test/procedure/555",
+              "http://www.52north.org/test/procedure/9",
+              "ws2500",
+              "ws2500-internal",
+              "wwu-ws-kli-hsb",
+              "wxt520"
+            ]
+          },
+          "spatialFilter" : {
+            "min" : "51.9347763061523 7.59587907791138",
+            "max" : "51.9692611694336 7.652428150177"
+          }
+        },
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "GetObservation" : {
+        "parameters" : {
+          "featureOfInterest" : {
+            "allowedValues" : [
+              "elv-ws2500",
+              "elv-ws2500-internal",
+              "http://www.52north.org/test/featureOfInterest/9",
+              "http://www.52north.org/test/featureOfInterest/world",
+              "vaisala-wxt520",
+              "wwu-ws-kli-hsb"
+            ]
+          },
+          "observedProperty" : {
+            "allowedValues" : [
+              "AirTemperature",
+              "AthmosphericPressure",
+              "Dewpoint",
+              "HailAccumulated",
+              "HailDuration",
+              "HailIntensity",
+              "HailPeakIntensity",
+              "Humidity",
+              "InSystemTemperature",
+              "Luminance",
+              "RainfallAccumulated",
+              "RainfallDuration",
+              "RainfallIntensity",
+              "RainfallPeakIntensity",
+              "ShortwaveRadiation",
+              "Sunshine",
+              "Visibility",
+              "WeatherCode",
+              "WeatherCodeText",
+              "WindDirection",
+              "WindDirectionAverage",
+              "WindDirectionMaximum",
+              "WindDirectionMinimum",
+              "WindDirectionText",
+              "WindMaxGust",
+              "WindSpeed",
+              "WindSpeedAverage",
+              "WindSpeedBft",
+              "WindSpeedKmh",
+              "WindSpeedMaximum",
+              "WindSpeedMinimum",
+              "WindSpeedMperSec",
+              "Windchill",
+              "http://www.52north.org/test/observableProperty/9_1",
+              "http://www.52north.org/test/observableProperty/9_2",
+              "http://www.52north.org/test/observableProperty/9_3",
+              "http://www.52north.org/test/observableProperty/9_4",
+              "http://www.52north.org/test/observableProperty/9_5",
+              "http://www.52north.org/test/observableProperty/9_6",
+              "http://www.52north.org/test/observableProperty/9_7",
+              "http://www.52north.org/test/observableProperty/9_8",
+              "http://www.52north.org/test/observableProperty/9_9"
+            ]
+          },
+          "offering" : {
+            "allowedValues" : [
+              "http://www.52north.org/test/offering/555",
+              "http://www.52north.org/test/offering/9",
+              "ws2500",
+              "ws2500-internal",
+              "wwu-ws-kli-hsb",
+              "wxt520"
+            ]
+          },
+          "procedure" : {
+            "allowedValues" : [
+              "http://www.52north.org/test/procedure/555",
+              "http://www.52north.org/test/procedure/9",
+              "ws2500",
+              "ws2500-internal",
+              "wwu-ws-kli-hsb",
+              "wxt520"
+            ]
+          },
+          "responseFormat" : {
+            "allowedValues" : [
+              "application/json",
+              "application/netcdf",
+              "application/netcdf; profile=OceanSITES",
+              "application/netcdf; version=3",
+              "application/netcdf; version=3; profile=OceanSITES",
+              "application/netcdf; version=4",
+              "application/netcdf; version=4; profile=OceanSITES",
+              "application/uvf",
+              "application/uvf; lineending=Mac",
+              "application/uvf; lineending=Unix",
+              "application/uvf; lineending=Windows",
+              "application/zip; subtype=netcdf",
+              "application/zip; subtype=netcdf; profile=OceanSITES",
+              "application/zip; subtype=netcdf; version=3",
+              "application/zip; subtype=netcdf; version=3; profile=OceanSITES",
+              "application/zip; subtype=netcdf; version=4",
+              "application/zip; subtype=netcdf; version=4; profile=OceanSITES",
+              "http://dd.eionet.europa.eu/schemaset/id2011850eu-1.0",
+              "http://inspire.ec.europa.eu/schemas/omso/3.0",
+              "http://www.opengis.net/gwml/2.2",
+              "http://www.opengis.net/om/2.0",
+              "http://www.opengis.net/waterml-dr/2.0",
+              "http://www.opengis.net/waterml/2.0"
+            ]
+          },
+          "resultFilter" : "any",
+          "spatialFilter" : {
+            "min" : "51.9347763061523 7.59587907791138",
+            "max" : "51.9692611694336 7.652428150177"
+          },
+          "temporalFilter" : {
+            "min" : "2012-11-19T17:45:15.000Z",
+            "max" : "2018-03-28T23:50:00.000Z"
+          }
+        },
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "GetObservationById" : {
+        "parameters" : {
+          "observation" : "any"
+        },
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "GetResult" : {
+        "parameters" : {
+          "featureOfInterest" : "any",
+          "observedProperty" : "any",
+          "offering" : {
+            "allowedValues" : [
+              "http://www.52north.org/test/offering/555",
+              "http://www.52north.org/test/offering/9",
+              "ws2500",
+              "ws2500-internal",
+              "wwu-ws-kli-hsb",
+              "wxt520"
+            ]
+          }
+        },
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "GetResultTemplate" : {
+        "parameters" : {
+          "observedProperty" : "any",
+          "offering" : "any"
+        },
+        "dcp" : [
+          {
+            "method" : "GET",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/kvp?",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/x-kvp"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "InsertFeatureOfInterest" : {
+        "dcp" : [
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "InsertObservation" : {
+        "parameters" : {
+          "observation" : [
+            "any",
+            {
+              "dataType" : "http://schemas.opengis.net/om/2.0/observation.xsd#OM_Observation"
+            }
+          ],
+          "offering" : {
+            "allowedValues" : [
+              "http://www.52north.org/test/offering/555",
+              "http://www.52north.org/test/offering/9",
+              "ws2500",
+              "ws2500-internal",
+              "wwu-ws-kli-hsb",
+              "wxt520"
+            ]
+          }
+        },
+        "dcp" : [
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "InsertResult" : {
+        "parameters" : {
+          "resultValues" : "any",
+          "template" : "any"
+        },
+        "dcp" : [
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "InsertResultTemplate" : {
+        "parameters" : {
+          "proposedTemplate" : "any"
+        },
+        "dcp" : [
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "InsertSensor" : {
+        "parameters" : {
+          "metadata" : [
+            "any",
+            {
+              "dataType" : "http://schemas.opengis.net/sos/2.0/sosInsertionCapabilities.xsd#InsertionCapabilities"
+            }
+          ],
+          "observableProperty" : "any",
+          "procedureDescription" : "any",
+          "procedureDescriptionFormat" : {
+            "allowedValues" : [
+              "http://www.opengis.net/sensorML/1.0.1",
+              "http://www.opengis.net/sensorml/2.0",
+              "http://www.opengis.net/waterml/2.0/observationProcess"
+            ]
+          }
+        },
+        "dcp" : [
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "UpdateSensorDescription" : {
+        "parameters" : {
+          "description" : "any",
+          "procedure" : {
+            "allowedValues" : [
+              "http://www.52north.org/test/procedure/555",
+              "http://www.52north.org/test/procedure/9",
+              "ws2500",
+              "ws2500-internal",
+              "wwu-ws-kli-hsb",
+              "wxt520"
+            ]
+          },
+          "procedureDescriptionFormat" : {
+            "allowedValues" : [
+              "http://www.opengis.net/sensorML/1.0.1",
+              "http://www.opengis.net/sensorml/2.0",
+              "http://www.opengis.net/waterml/2.0/observationProcess"
+            ]
+          }
+        },
+        "dcp" : [
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/json",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/json"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/soap",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/soap+xml"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/exi",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/exi"
+                ]
+              }
+            }
+          },
+          {
+            "method" : "POST",
+            "href" : "http://localhost:8080/52n-sos-webapp/service/pox",
+            "constraints" : {
+              "Content-Type" : {
+                "allowedValues" : [
+                  "application/xml",
+                  "text/xml"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "contents" : [
+    {
+      "identifier" : "http://www.52north.org/test/offering/555",
+      "name" : "Test Offering #555",
+      "procedure" : [
+        "http://www.52north.org/test/procedure/555"
+      ],
+      "observableProperty" : [
+        "http://www.52north.org/test/observableProperty/9_1",
+        "http://www.52north.org/test/observableProperty/9_2",
+        "http://www.52north.org/test/observableProperty/9_3",
+        "http://www.52north.org/test/observableProperty/9_4",
+        "http://www.52north.org/test/observableProperty/9_5",
+        "http://www.52north.org/test/observableProperty/9_6",
+        "http://www.52north.org/test/observableProperty/9_7",
+        "http://www.52north.org/test/observableProperty/9_8",
+        "http://www.52north.org/test/observableProperty/9_9"
+      ],
+      "observedArea" : {
+        "lowerLeft" : [
+          51.9351011001049,
+          7.65196881225419
+        ],
+        "upperRight" : [
+          51.9351011001049,
+          7.65196881225419
+        ],
+        "crs" : {
+          "type" : "link",
+          "properties" : {
+            "href" : "http://www.opengis.net/def/crs/EPSG/0/4326"
+          }
+        }
+      },
+      "phenomenonTime" : [
+        "2012-11-19T17:45:15.000Z",
+        "2012-11-19T17:45:15.000Z"
+      ],
+      "resultTime" : [
+        "2012-11-19T17:45:15.000Z",
+        "2012-11-19T17:45:15.000Z"
+      ],
+      "responseFormat" : [
+        "http://www.opengis.net/gwml/2.2",
+        "http://www.opengis.net/om/2.0"
+      ],
+      "observationType" : [
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_CategoryObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_ComplexObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_CountObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_GeometryObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_ReferenceObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_SWEArrayObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_TextObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_TruthObservation"
+      ],
+      "featureOfInterestType" : [
+        "http://www.opengis.net/def/samplingFeatureType/OGC-OM/2.0/SF_SamplingPoint"
+      ],
+      "procedureDescriptionFormat" : [
+        "http://inspire.ec.europa.eu/schemas/ompr/3.0",
+        "http://www.opengis.net/sensorML/1.0.1",
+        "http://www.opengis.net/sensorml/2.0",
+        "http://www.opengis.net/waterml/2.0/observationProcess"
+      ]
+    },
+    {
+      "identifier" : "http://www.52north.org/test/offering/9",
+      "name" : "Offering for sensor 9",
+      "procedure" : [
+        "http://www.52north.org/test/procedure/9"
+      ],
+      "observableProperty" : [
+        "http://www.52north.org/test/observableProperty/9_1",
+        "http://www.52north.org/test/observableProperty/9_2",
+        "http://www.52north.org/test/observableProperty/9_3",
+        "http://www.52north.org/test/observableProperty/9_4",
+        "http://www.52north.org/test/observableProperty/9_5",
+        "http://www.52north.org/test/observableProperty/9_6",
+        "http://www.52north.org/test/observableProperty/9_7",
+        "http://www.52north.org/test/observableProperty/9_8",
+        "http://www.52north.org/test/observableProperty/9_9"
+      ],
+      "phenomenonTime" : [
+        "0000-01-01T00:00:00.000+00:00",
+        "0000-01-01T00:00:00.000+00:00"
+      ],
+      "resultTime" : [
+        "0000-01-01T00:00:00.000+00:00",
+        "0000-01-01T00:00:00.000+00:00"
+      ],
+      "responseFormat" : [
+        "http://www.opengis.net/gwml/2.2",
+        "http://www.opengis.net/om/2.0"
+      ],
+      "observationType" : [
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_CategoryObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_ComplexObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_CountObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_GeometryObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_ReferenceObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_SWEArrayObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_TextObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_TruthObservation"
+      ],
+      "featureOfInterestType" : [
+        "http://www.opengis.net/def/samplingFeatureType/OGC-OM/2.0/SF_SamplingPoint"
+      ],
+      "procedureDescriptionFormat" : [
+        "http://inspire.ec.europa.eu/schemas/ompr/3.0",
+        "http://www.opengis.net/sensorML/1.0.1",
+        "http://www.opengis.net/sensorml/2.0",
+        "http://www.opengis.net/waterml/2.0/observationProcess"
+      ]
+    },
+    {
+      "identifier" : "ws2500",
+      "name" : "offeringID",
+      "procedure" : [
+        "ws2500"
+      ],
+      "observableProperty" : [
+        "AirTemperature",
+        "AthmosphericPressure",
+        "Dewpoint",
+        "Humidity",
+        "Luminance",
+        "RainfallAccumulated",
+        "Sunshine",
+        "WindDirection",
+        "WindSpeed",
+        "Windchill"
+      ],
+      "observedArea" : {
+        "lowerLeft" : [
+          51.934814453125,
+          7.652428150177
+        ],
+        "upperRight" : [
+          51.934814453125,
+          7.652428150177
+        ],
+        "crs" : {
+          "type" : "link",
+          "properties" : {
+            "href" : "http://www.opengis.net/def/crs/EPSG/0/4326"
+          }
+        }
+      },
+      "phenomenonTime" : [
+        "2018-03-01T00:30:00.000Z",
+        "2018-03-28T23:45:00.000Z"
+      ],
+      "resultTime" : [
+        "2018-03-28T23:59:00.000Z",
+        "2018-03-28T23:59:00.000Z"
+      ],
+      "responseFormat" : [
+        "http://inspire.ec.europa.eu/schemas/omso/3.0",
+        "http://www.opengis.net/om/2.0"
+      ],
+      "observationType" : [
+        "http://inspire.ec.europa.eu/featureconcept/PointObservation",
+        "http://inspire.ec.europa.eu/featureconcept/PointTimeSeriesObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement"
+      ],
+      "featureOfInterestType" : [
+        "http://www.opengis.net/def/samplingFeatureType/OGC-OM/2.0/SF_SamplingPoint"
+      ],
+      "procedureDescriptionFormat" : [
+        "http://inspire.ec.europa.eu/schemas/ompr/3.0",
+        "http://www.opengis.net/sensorML/1.0.1",
+        "http://www.opengis.net/sensorml/2.0",
+        "http://www.opengis.net/waterml/2.0/observationProcess"
+      ]
+    },
+    {
+      "identifier" : "ws2500-internal",
+      "name" : "offeringID",
+      "procedure" : [
+        "ws2500-internal"
+      ],
+      "observableProperty" : [
+        "AirTemperature",
+        "Humidity"
+      ],
+      "observedArea" : {
+        "lowerLeft" : [
+          51.934814453125,
+          7.65234184265137
+        ],
+        "upperRight" : [
+          51.934814453125,
+          7.65234184265137
+        ],
+        "crs" : {
+          "type" : "link",
+          "properties" : {
+            "href" : "http://www.opengis.net/def/crs/EPSG/0/4326"
+          }
+        }
+      },
+      "phenomenonTime" : [
+        "2018-03-01T00:30:00.000Z",
+        "2018-03-28T23:45:00.000Z"
+      ],
+      "resultTime" : [
+        "2018-03-28T23:59:00.000Z",
+        "2018-03-28T23:59:00.000Z"
+      ],
+      "responseFormat" : [
+        "http://inspire.ec.europa.eu/schemas/omso/3.0",
+        "http://www.opengis.net/om/2.0"
+      ],
+      "observationType" : [
+        "http://inspire.ec.europa.eu/featureconcept/PointObservation",
+        "http://inspire.ec.europa.eu/featureconcept/PointTimeSeriesObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement"
+      ],
+      "featureOfInterestType" : [
+        "http://www.opengis.net/def/samplingFeatureType/OGC-OM/2.0/SF_SamplingPoint"
+      ],
+      "procedureDescriptionFormat" : [
+        "http://inspire.ec.europa.eu/schemas/ompr/3.0",
+        "http://www.opengis.net/sensorML/1.0.1",
+        "http://www.opengis.net/sensorml/2.0",
+        "http://www.opengis.net/waterml/2.0/observationProcess"
+      ]
+    },
+    {
+      "identifier" : "wwu-ws-kli-hsb",
+      "name" : "offeringID",
+      "procedure" : [
+        "wwu-ws-kli-hsb"
+      ],
+      "observableProperty" : [
+        "AirTemperature",
+        "AthmosphericPressure",
+        "Humidity",
+        "ShortwaveRadiation",
+        "Visibility",
+        "WeatherCode",
+        "WeatherCodeText",
+        "WindDirection",
+        "WindDirectionText",
+        "WindMaxGust",
+        "WindSpeedBft",
+        "WindSpeedKmh",
+        "WindSpeedMperSec"
+      ],
+      "observedArea" : {
+        "lowerLeft" : [
+          51.9692611694336,
+          7.59587907791138
+        ],
+        "upperRight" : [
+          51.9692611694336,
+          7.59587907791138
+        ],
+        "crs" : {
+          "type" : "link",
+          "properties" : {
+            "href" : "http://www.opengis.net/def/crs/EPSG/0/4326"
+          }
+        }
+      },
+      "phenomenonTime" : [
+        "2018-03-01T00:10:00.000Z",
+        "2018-03-28T23:50:00.000Z"
+      ],
+      "resultTime" : [
+        "2018-03-28T23:59:00.000Z",
+        "2018-03-28T23:59:00.000Z"
+      ],
+      "responseFormat" : [
+        "http://inspire.ec.europa.eu/schemas/omso/3.0",
+        "http://www.opengis.net/gwml/2.2",
+        "http://www.opengis.net/om/2.0"
+      ],
+      "observationType" : [
+        "http://inspire.ec.europa.eu/featureconcept/PointObservation",
+        "http://inspire.ec.europa.eu/featureconcept/PointTimeSeriesObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_TextObservation"
+      ],
+      "featureOfInterestType" : [
+        "http://www.opengis.net/def/samplingFeatureType/OGC-OM/2.0/SF_SamplingPoint"
+      ],
+      "procedureDescriptionFormat" : [
+        "http://inspire.ec.europa.eu/schemas/ompr/3.0",
+        "http://www.opengis.net/sensorML/1.0.1",
+        "http://www.opengis.net/sensorml/2.0",
+        "http://www.opengis.net/waterml/2.0/observationProcess"
+      ]
+    },
+    {
+      "identifier" : "wxt520",
+      "name" : "offeringID",
+      "procedure" : [
+        "wxt520"
+      ],
+      "observableProperty" : [
+        "AirTemperature",
+        "AthmosphericPressure",
+        "HailAccumulated",
+        "HailDuration",
+        "HailIntensity",
+        "HailPeakIntensity",
+        "Humidity",
+        "InSystemTemperature",
+        "RainfallAccumulated",
+        "RainfallDuration",
+        "RainfallIntensity",
+        "RainfallPeakIntensity",
+        "WindDirectionAverage",
+        "WindDirectionMaximum",
+        "WindDirectionMinimum",
+        "WindSpeedAverage",
+        "WindSpeedMaximum",
+        "WindSpeedMinimum"
+      ],
+      "observedArea" : {
+        "lowerLeft" : [
+          51.9347763061523,
+          7.65237522125244
+        ],
+        "upperRight" : [
+          51.9347763061523,
+          7.65237522125244
+        ],
+        "crs" : {
+          "type" : "link",
+          "properties" : {
+            "href" : "http://www.opengis.net/def/crs/EPSG/0/4326"
+          }
+        }
+      },
+      "phenomenonTime" : [
+        "2018-03-01T00:16:55.000Z",
+        "2018-03-28T23:46:46.000Z"
+      ],
+      "resultTime" : [
+        "2018-03-28T23:59:00.000Z",
+        "2018-03-28T23:59:00.000Z"
+      ],
+      "responseFormat" : [
+        "http://inspire.ec.europa.eu/schemas/omso/3.0",
+        "http://www.opengis.net/om/2.0"
+      ],
+      "observationType" : [
+        "http://inspire.ec.europa.eu/featureconcept/PointObservation",
+        "http://inspire.ec.europa.eu/featureconcept/PointTimeSeriesObservation",
+        "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement"
+      ],
+      "featureOfInterestType" : [
+        "http://www.opengis.net/def/samplingFeatureType/OGC-OM/2.0/SF_SamplingPoint"
+      ],
+      "procedureDescriptionFormat" : [
+        "http://inspire.ec.europa.eu/schemas/ompr/3.0",
+        "http://www.opengis.net/sensorML/1.0.1",
+        "http://www.opengis.net/sensorml/2.0",
+        "http://www.opengis.net/waterml/2.0/observationProcess"
+      ]
+    }
+  ],
+  "filterCapabilities" : {
+    "spatial" : {
+      "operands" : [
+        {
+          "$ref" : "http://www.52north.org/schema/json/Envelope#"
+        }
+      ],
+      "operators" : {
+        "bbox" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/Envelope#"
+          }
+        ]
+      }
+    },
+    "temporal" : {
+      "operands" : [
+        {
+          "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+        },
+        {
+          "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+        }
+      ],
+      "operators" : {
+        "before" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "after" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "begins" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "ends" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "endedBy" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "begunBy" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "during" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "equals" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "contains" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "overlaps" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "meets" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "metBy" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ],
+        "overlappedby" : [
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimeInstant#"
+          },
+          {
+            "$ref" : "http://www.52north.org/schema/json/TimePeriod#"
+          }
+        ]
+      }
+    }
+  }
+}
