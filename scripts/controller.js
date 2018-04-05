@@ -5,6 +5,7 @@ var local_sos= 'https://'
 var GetCapabilitiesXML
 var markerJSON
 var stationCount
+var markers = L.markerClusterGroup();
 
 var map = L.map('map').setView([19.228825, 72.854110], 1.5);
 
@@ -35,19 +36,21 @@ $.ajax({
     // console.log(result);
     GetCapabilitiesXML=StringToXMLDom(result);
 
-    console.log(GetCapabilitiesXML)
+    // console.log(GetCapabilitiesXML)
     var capabilities = GetCapabilitiesXML.getElementsByTagName('sos:Capabilities')[0]
-    console.log(capabilities)
+    // console.log(capabilities)
     var observationOfferingList = capabilities.children[3].children[0].children;
-    console.log(observationOfferingList)
+    // console.log(observationOfferingList)
     stationCount=observationOfferingList.length
     var stationCoordinates
     var stationDetails
     for (i = 1; i < stationCount; i++) {
       stationDetails=observationOfferingList[i].children[1].innerHTML;
       stationCoordinates=observationOfferingList[i].children[3].children[0].children[0].innerHTML.split(' ');
-      var marker=L.marker([stationCoordinates[0], stationCoordinates[1]]).addTo(map);
+      var marker=L.marker([stationCoordinates[0], stationCoordinates[1]]);
       marker.bindPopup(stationDetails);
+      markers.addLayer(marker);
+      map.addLayer(markers);
     }
 
   },
