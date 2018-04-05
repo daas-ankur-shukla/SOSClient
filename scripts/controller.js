@@ -32,11 +32,28 @@ function StringToXMLDom(string) {
   return xmlDoc;
 }
 
-function describeStation(stationXML) {
-  console.log(stationXML.children[0].children[0].children[0])
-  var stationInfo = stationXML.children[0].children[0].children[0];
-  
-  return 'hi'
+function describeStation(stationXML, stationID) {
+  var stationInfo = stationXML.children[0].children[0].children[0].children;
+  console.log(stationInfo)
+  if(stationInfo.length>0){
+    var stationDes = {
+      id: stationID,
+      description: stationInfo[0].innerHTML,
+      name: 'Station-'+stationID,
+      beginTime: -1,
+      endTIme: -1,
+    }
+    if(stationInfo.length==13){
+      stationDes['beginTime']= stationInfo[5].children[0].children[0].innerHTML;
+      stationDes['endTime'] = stationInfo[5].children[0].children[1].innerHTML;
+    }
+    // console.log(stationDes);
+    // TODO: optimize next statement by rendering stationXML variable in new tab
+    var des = '<h1>Station-'+stationDes['id']+'</h1> <p>Hi, I am Station '+stationID+',\n<p>To get my observations <a href=\'\' target=\'_blank\'>click here</a>\nand to know more about me <a href=\''+describeStationURL+stationID+'\' target=\'_blank\'>click here</a>'
+    return des;
+  } else{
+    return '<p>Sorry, I am lost :('
+  }
 }
 
 var co;
@@ -52,25 +69,26 @@ $.ajax({
     var capabilities = GetCapabilitiesXML.getElementsByTagName('sos:Capabilities')[0]
     // console.log(capabilities)
     var observationOfferingList = capabilities.children[3].children[0].children;
-    console.log(observationOfferingList[2])
+    // console.log(observationOfferingList[2])
     stationCount = observationOfferingList.length
     var stationCoordinates
     var stationDetails
     for (i = 1; i < stationCount; i++) {
       var stationHTML = '<p>Station Description: ' + observationOfferingList[i].children[0].innerHTML + '</p>';
       var stationID = observationOfferingList[i].children[1].innerHTML.split(':').pop()
+      // console.log(stationID)
       stationHTML += '<p>StationID: ' + stationID + '</p>';
       stationCoordinates = observationOfferingList[i].children[3].children[0].children[0].innerHTML.split(' ');
       stationMarker = L.marker([stationCoordinates[0], stationCoordinates[1]], {stationID: stationID});
       stationMarker.bindPopup('<p>Please wait, I am looking for my SensorML</p>');
       stationMarker.on('click', function(e) {
         var popup = e.target.getPopup();
-        var id = this.options.stationID
+        var id = this.options.stationID;
         setTimeout(function() {
           // console.log(e.target, e.target.options.stationID)
           $.get(describeStationURL+id).done(function(data) {
             // console.log(data)
-            stationData = describeStation(data);
+            stationData = describeStation(data, id);
             popup.setContent(stationData);
             popup.update();
           });
