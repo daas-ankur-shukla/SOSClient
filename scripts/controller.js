@@ -35,23 +35,24 @@ function StringToXMLDom(string) {
 function describeStation(stationXML, stationID) {
   var stationInfo = stationXML.children[0].children[0].children[0].children;
   console.log(stationInfo)
-  if(stationInfo.length>0){
+  if (stationInfo.length > 0) {
     var stationDes = {
       id: stationID,
       description: stationInfo[0].innerHTML,
-      name: 'Station-'+stationID,
+      name: 'Station-' + stationID,
       beginTime: -1,
-      endTIme: -1,
+      endTIme: -1
     }
-    if(stationInfo.length==13){
-      stationDes['beginTime']= stationInfo[5].children[0].children[0].innerHTML;
+    if (stationInfo.length == 13) {
+      stationDes['beginTime'] = stationInfo[5].children[0].children[0].innerHTML;
       stationDes['endTime'] = stationInfo[5].children[0].children[1].innerHTML;
     }
     // console.log(stationDes);
     // TODO: optimize next statement by rendering stationXML variable in new tab
-    var des = '<h1>Station-'+stationDes['id']+'</h1> <p>Hi, I am Station '+stationID+',\n<p>To get my observations <a href=\'\' target=\'_blank\'>click here</a>\nand to know more about me <a href=\''+describeStationURL+stationID+'\' target=\'_blank\'>click here</a>'
+    // var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + ',\n<p>To get my observations <a href=\'\' target=\'_blank\'>click here</a>\nand to know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>'
+    var des = '<iframe src=\"http://www.ndbc.noaa.gov/widgets/station_page.php?station='+stationID+'\" style=\"border: solid thin #3366ff; width:300px; height:300px\"></iframe>'
     return des;
-  } else{
+  } else {
     return '<p>Sorry, I am lost :('
   }
 }
@@ -79,14 +80,16 @@ $.ajax({
       // console.log(stationID)
       stationHTML += '<p>StationID: ' + stationID + '</p>';
       stationCoordinates = observationOfferingList[i].children[3].children[0].children[0].innerHTML.split(' ');
-      stationMarker = L.marker([stationCoordinates[0], stationCoordinates[1]], {stationID: stationID});
+      stationMarker = L.marker([
+        stationCoordinates[0], stationCoordinates[1]
+      ], {stationID: stationID});
       stationMarker.bindPopup('<p>Please wait, I am looking for my SensorML</p>');
       stationMarker.on('click', function(e) {
         var popup = e.target.getPopup();
         var id = this.options.stationID;
         setTimeout(function() {
           // console.log(e.target, e.target.options.stationID)
-          $.get(describeStationURL+id).done(function(data) {
+          $.get(describeStationURL + id).done(function(data) {
             // console.log(data)
             stationData = describeStation(data, id);
             popup.setContent(stationData);
@@ -96,7 +99,7 @@ $.ajax({
         }, 150);
 
       })
-      stationArray.push({marker:stationMarker, detail:stationHTML});
+      stationArray.push({marker: stationMarker, detail: stationHTML});
       stationGroups.addLayer(stationMarker);
     }
 
