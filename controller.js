@@ -1,13 +1,33 @@
 // Variable definitions
 var map
-var ndbc_sos = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetCapabilities&service=SOS'
-var describeStationURL = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=DescribeSensor&service=SOS&version=1.0.0&outputformat=text/xml;subtype=%22sensorML/1.0.1%22&procedure=urn:ioos:station:wmo:'
-var local_sos = 'https://'
+const ndbc_sos = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetCapabilities&service=SOS'
+const describeStationURL = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=DescribeSensor&service=SOS&version=1.0.0&outputformat=text/xml;subtype=%22sensorML/1.0.1%22&procedure=urn:ioos:station:wmo:'
+const local_sos = 'https://'
 var GetCapabilitiesXML
 var markerJSON
 var stationCount
 var stationArray = []
 var stationGroups = L.markerClusterGroup({chunkedLoading: true});
+
+const obsPropMap = {
+  'sea_floor_depth_below_sea_surface': 'Sea Floor Depth Below Sea Surface',
+  'air_pressure_at_sea_level': 'Air Pressure At Sea Level',
+  'sea_water_temperature': 'Sea Water Temperature',
+  'sea_water_salinity': 'Sea Water Salinity',
+  'air_temperature': 'Air Temperature',
+  'waves': 'Waves',
+  'winds': 'Winds',
+}
+
+// create popup contents
+// var customPopup = "Mozilla Toronto Offices<br/><img src='http://joshuafrazier.info/images/maptime.gif' alt='maptime logo gif' width='350px'/>";
+
+// specify popup options
+// const customOptions = {
+//   'maxWidth': '1200',
+//   'className' : 'customPopup'
+// }
+
 
 var stationMarker
 var map = L.map('map').setView([
@@ -21,8 +41,9 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 function getObservationURL(id, property) {
   // console.log(property)
-  return 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:'+id+'&observedproperty='+property+'&responseformat=text/xml;subtype=\"om/1.0.0\"&eventtime=latest';
+  return 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:' + id + '&observedproperty=' + property + '&responseformat=text/xml;subtype=\"om/1.0.0\"&eventtime=latest';
 }
+
 function StringToXMLDom(string) {
   var xmlDoc = null;
   if (window.DOMParser) {
@@ -36,18 +57,27 @@ function StringToXMLDom(string) {
   return xmlDoc;
 }
 
+function propClick(){
+  console.log('i was called');
+}
+
+function getPropertyData(getObservationXML) {
+  observedProperty = StringToXMLDom(getObservationXML);
+  console.log(getObservationXML)
+}
+
 function describeStation(stationXML, stationID, observedProps) {
-  // var props = observedProps.map(function(prop){
-  //   var propName = prop.outerHTML.split('/').pop()
-  //   var observationURL = getObservationURL(propName)
-  //   return '<a href=\''+observationURL+'\'>'+propName+'</a>'
-  // })
   var props = [];
-  for(var i=0;i<observedProps.length;i++){
+  for (var i = 0; i < observedProps.length; i++) {
     propName = observedProps[i].outerHTML.split('/').slice(-2, -1)[0].split('"')[0]
     // console.log(propName)
     observationURL = getObservationURL(stationID, propName)
-    props.push('<a href=\''+observationURL+'\'>'+propName+'</a>');
+    $.get(observationURL).done(function(data) {
+      console.log('processing'+i)
+      observedPropertyData = getPropertyData(data);
+
+    });
+    props.push('<tr><td width=\'15%\'><img src=\'./images/'+propName+'.png\' width=\'30\' height=\'30\' align=\'left\'/></td><td width=\'85%\'><a href=\'' + observationURL + '\' target=\'_blank\'>   ' + obsPropMap[propName] + '</a></td></tr>');
   }
   // console.log(props)
   var stationInfo = stationXML.children[0].children[0].children[0].children;
@@ -66,7 +96,8 @@ function describeStation(stationXML, stationID, observedProps) {
     }
     // console.log(stationDes);
     // TODO: optimize next statement by rendering stationXML variable in new tab
-    var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + ',\n<p>To get my observations <a href=\'\' target=\'_blank\'>click here</a>\nand to know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>'+'\n'+props.join('\n')
+    var des = '<table style=\'width:100%\' border=\'2\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-'+stationID+'</h1></td></tr>' + props.join('\n')+'</table>';
+    // var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + '\nTo know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>,\n<p>To get my observations click on the respective links</a>' + '\n<ol>' + props.join('\n')+'</ol>';
     // var des = '<iframe src=\"http://www.ndbc.noaa.gov/widgets/station_page.php?station='+stationID+'\" style=\"border: solid thin #3366ff; width:300px; height:300px\"></iframe>'
     return des;
   } else {
@@ -100,9 +131,13 @@ $.ajax({
 
       stationMarker = L.marker([
         stationCoordinates[0], stationCoordinates[1]
-      ], {stationID: stationID, observedProps: observationOfferingList[i].getElementsByTagName("sos:observedProperty")});
+      ], {
+        stationID: stationID,
+        observedProps: observationOfferingList[i].getElementsByTagName("sos:observedProperty")
+      });
 
-      stationMarker.bindPopup('<p>Please wait, I am looking for my SensorML</p>');
+      const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
+      stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
         var id = this.options.stationID;
         var observedProps = this.options.observedProps
