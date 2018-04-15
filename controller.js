@@ -57,13 +57,11 @@ function StringToXMLDom(string) {
   return xmlDoc;
 }
 
-function propClick(){
-  console.log('i was called');
-}
+
 
 function getPropertyData(getObservationXML) {
   observedProperty = StringToXMLDom(getObservationXML);
-  console.log(getObservationXML)
+  // console.log(getObservationXML)
 }
 
 function describeStation(stationXML, stationID, observedProps) {
@@ -73,7 +71,6 @@ function describeStation(stationXML, stationID, observedProps) {
     // console.log(propName)
     observationURL = getObservationURL(stationID, propName)
     $.get(observationURL).done(function(data) {
-      console.log('processing'+i)
       observedPropertyData = getPropertyData(data);
 
     });
@@ -96,7 +93,7 @@ function describeStation(stationXML, stationID, observedProps) {
     }
     // console.log(stationDes);
     // TODO: optimize next statement by rendering stationXML variable in new tab
-    var des = '<table style=\'width:100%\' border=\'2\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-'+stationID+'</h1></td></tr>' + props.join('\n')+'</table>';
+    var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-'+stationID+'</h1></td></tr>' + props.join('\n')+'</table>';
     // var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + '\nTo know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>,\n<p>To get my observations click on the respective links</a>' + '\n<ol>' + props.join('\n')+'</ol>';
     // var des = '<iframe src=\"http://www.ndbc.noaa.gov/widgets/station_page.php?station='+stationID+'\" style=\"border: solid thin #3366ff; width:300px; height:300px\"></iframe>'
     return des;
@@ -106,6 +103,56 @@ function describeStation(stationXML, stationID, observedProps) {
 }
 
 var co;
+
+function spatialFiltering(state) {
+  if(state) {
+
+  }else {
+
+  }
+};
+
+function temporalFiltering(state) {
+  if(state) {
+
+  }else {
+
+  }
+};
+
+function propertyFiltering(state) {
+  if(state) {
+
+  }else {
+
+  }
+};
+
+
+$('#spatialFilter').change(function() {
+  if($('#spatialFilter').prop('checked')) {
+    spatialFiltering(true);
+  } else {
+    spatialFiltering(false)
+  }
+});
+
+$('#temporalFilter').change(function() {
+  if($('#temporalFilter').prop('checked')) {
+    temporalFiltering(true);
+  } else {
+    temporalFiltering(false)
+  }
+});
+
+$('#propertyFilter').change(function() {
+  if($('#propertyFilter').prop('checked')) {
+    propertyFiltering(true);
+  } else {
+    propertyFiltering(false)
+  }
+});
+
 
 $.ajax({
   url: ndbc_sos,
@@ -133,7 +180,8 @@ $.ajax({
         stationCoordinates[0], stationCoordinates[1]
       ], {
         stationID: stationID,
-        observedProps: observationOfferingList[i].getElementsByTagName("sos:observedProperty")
+        observedProps: observationOfferingList[i].getElementsByTagName("sos:observedProperty"),
+        enabled: true,
       });
 
       const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
