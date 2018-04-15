@@ -194,7 +194,7 @@ $.ajax({
         stationCoordinates[0], stationCoordinates[1]
       ], {
         stationID: stationID,
-        observedProps: observationOfferingList[i].getElementsByTagName("sos:observedProperty"),
+        observedProps: getProperties(observationOfferingList[i].getElementsByTagName("sos:observedProperty")),
         enabled: true,
       });
 
@@ -209,7 +209,7 @@ $.ajax({
           // console.log(e.target, e.target.options.stationID)
           $.get(describeStationURL + id).done(function(data) {
             // console.log(data)
-            stationData = describeStation(data, id, getProperties(observedProps));
+            stationData = describeStation(data, id, observedProps);
             popup.setContent(stationData);
             popup.update();
           });
