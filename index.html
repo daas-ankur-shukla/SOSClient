@@ -34,9 +34,19 @@
   <script src="gauge.js"></script>
   <div class="pull-left" id="map"></div>
   <div id="filterControl">
-    <input type="checkbox" value="spatial" id="spatialFilter">Spatial Filter</input>
-    <input type="checkbox" value="temporal" id="temporalFilter">Temporal Filter</input>
-    <input type="checkbox" value="property" id="propertyFilter">Property Filter</input>
+    <input type="checkbox" value="Spatial" id="spatialFilter">Spatial Filter</input>
+    <input type="checkbox" value="Temporal" id="temporalFilter">Temporal Filter</input>
+    <input type="checkbox" value="Property" id="propertyFilter">Property Filter</input>
+    <select id="propSelect" disabled>
+      <option value="" selected disabled hidden>Choose here</option>
+      <option value="sea_floor_depth_below_sea_surface">Sea Floor Depth Below Sea Surface</option>
+      <option value="air_pressure_at_sea_level">Air Pressure At Sea Level</option>
+      <option value="sea_water_temperature">Sea Water Temperature</option>
+      <option value="sea_water_salinity">Sea Water Salinity</option>
+      <option value="air_temperature">Air Temperature</option>
+      <option value="waves">Waves</option>
+      <option value="winds">Winds</option>
+    </select>
   </div>
   <script src="controller.js"></script>
 </body>

@@ -15,6 +15,7 @@ const obsPropMap = {
   'sea_water_temperature': 'Sea Water Temperature',
   'sea_water_salinity': 'Sea Water Salinity',
   'air_temperature': 'Air Temperature',
+  'currents': 'Currents',
   'waves': 'Waves',
   'winds': 'Winds',
 }
@@ -57,24 +58,34 @@ function StringToXMLDom(string) {
   return xmlDoc;
 }
 
-
-
 function getPropertyData(getObservationXML) {
   observedProperty = StringToXMLDom(getObservationXML);
   // console.log(getObservationXML)
 }
 
-function describeStation(stationXML, stationID, observedProps) {
+function getProperties(observedProps) {
   var props = [];
   for (var i = 0; i < observedProps.length; i++) {
     propName = observedProps[i].outerHTML.split('/').slice(-2, -1)[0].split('"')[0]
-    // console.log(propName)
-    observationURL = getObservationURL(stationID, propName)
+    // console.log(propName);
+    props.push(propName);
+  }
+  // console.log(props);
+  return props;
+}
+
+function describeStation(stationXML, stationID, propList) {
+  var props = [];
+  // console.log(propList, propList.length)
+  for (var i = 0; i < propList.length; i++) {
+    // propName = observedProps[i].outerHTML.split('/').slice(-2, -1)[0].split('"')[0]
+    // console.log(propList[i])
+    observationURL = getObservationURL(stationID, propList[i])
     $.get(observationURL).done(function(data) {
       observedPropertyData = getPropertyData(data);
 
     });
-    props.push('<tr><td width=\'15%\'><img src=\'./images/'+propName+'.png\' width=\'30\' height=\'30\' align=\'left\'/></td><td width=\'85%\'><a href=\'' + observationURL + '\' target=\'_blank\'>   ' + obsPropMap[propName] + '</a></td></tr>');
+    props.push('<tr><td width=\'15%\'><img src=\'./images/'+propList[i]+'.png\' width=\'30\' height=\'30\' align=\'left\'/></td><td width=\'85%\'><a href=\'' + observationURL + '\' target=\'_blank\'>   ' + obsPropMap[propList[i]] + '</a></td></tr>');
   }
   // console.log(props)
   var stationInfo = stationXML.children[0].children[0].children[0].children;
@@ -120,12 +131,9 @@ function temporalFiltering(state) {
   }
 };
 
-function propertyFiltering(state) {
-  if(state) {
+function propertyFiltering(prop) {
+  console.log(prop);
 
-  }else {
-
-  }
 };
 
 
@@ -145,11 +153,17 @@ $('#temporalFilter').change(function() {
   }
 });
 
+
+
 $('#propertyFilter').change(function() {
   if($('#propertyFilter').prop('checked')) {
-    propertyFiltering(true);
+    $('#propSelect').prop('disabled',false);
+    $('#propSelect').on('change', function() {
+      propertyFiltering($('#propSelect').val())
+    })
   } else {
-    propertyFiltering(false)
+    $('#propSelect').prop('disabled',true);
+    propertyFiltering('RESET')
   }
 });
 
@@ -187,6 +201,7 @@ $.ajax({
       const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
       stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
+        // console.log(e.target.options.observedProps);
         var id = this.options.stationID;
         var observedProps = this.options.observedProps
         var popup = e.target.getPopup();
@@ -194,11 +209,11 @@ $.ajax({
           // console.log(e.target, e.target.options.stationID)
           $.get(describeStationURL + id).done(function(data) {
             // console.log(data)
-            stationData = describeStation(data, id, observedProps);
+            stationData = describeStation(data, id, getProperties(observedProps));
             popup.setContent(stationData);
             popup.update();
           });
-          //your code to be executed after 1 second
+          //your code to be executed after 0.15 second
         }, 150);
 
       })
