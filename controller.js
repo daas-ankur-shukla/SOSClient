@@ -17,7 +17,11 @@ const obsPropMap = {
   'air_temperature': 'Air Temperature',
   'currents': 'Currents',
   'waves': 'Waves',
-  'winds': 'Winds',
+  'winds': 'Winds'
+}
+
+function isInArray(value, array) {
+  return array.indexOf(value) > -1;
 }
 
 // create popup contents
@@ -28,7 +32,6 @@ const obsPropMap = {
 //   'maxWidth': '1200',
 //   'className' : 'customPopup'
 // }
-
 
 var stationMarker
 var map = L.map('map').setView([
@@ -85,7 +88,7 @@ function describeStation(stationXML, stationID, propList) {
       observedPropertyData = getPropertyData(data);
 
     });
-    props.push('<tr><td width=\'15%\'><img src=\'./images/'+propList[i]+'.png\' width=\'30\' height=\'30\' align=\'left\'/></td><td width=\'85%\'><a href=\'' + observationURL + '\' target=\'_blank\'>   ' + obsPropMap[propList[i]] + '</a></td></tr>');
+    props.push('<tr><td width=\'15%\'><img src=\'./images/' + propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/></td><td width=\'85%\'><a href=\'' + observationURL + '\' target=\'_blank\'>   ' + obsPropMap[propList[i]] + '</a></td></tr>');
   }
   // console.log(props)
   var stationInfo = stationXML.children[0].children[0].children[0].children;
@@ -104,7 +107,7 @@ function describeStation(stationXML, stationID, propList) {
     }
     // console.log(stationDes);
     // TODO: optimize next statement by rendering stationXML variable in new tab
-    var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-'+stationID+'</h1></td></tr>' + props.join('\n')+'</table>';
+    var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr>' + props.join('\n') + '</table>';
     // var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + '\nTo know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>,\n<p>To get my observations click on the respective links</a>' + '\n<ol>' + props.join('\n')+'</ol>';
     // var des = '<iframe src=\"http://www.ndbc.noaa.gov/widgets/station_page.php?station='+stationID+'\" style=\"border: solid thin #3366ff; width:300px; height:300px\"></iframe>'
     return des;
@@ -116,29 +119,38 @@ function describeStation(stationXML, stationID, propList) {
 var co;
 
 function spatialFiltering(state) {
-  if(state) {
-
-  }else {
-
-  }
+  // pankaj's code here
 };
 
 function temporalFiltering(state) {
-  if(state) {
-
-  }else {
-
-  }
+  if (state) {} else {}
 };
 
 function propertyFiltering(prop) {
-  console.log(prop);
-
+  if(prop!='RESET') {
+    for(i=0;i<stationCount-1;i++) {
+      if(!isInArray(prop,stationArray[i].marker.options.observedProps)) {
+        stationGroups.removeLayer(stationArray[i].marker);
+        stationGroups.refreshClusters();
+      }else {
+        if(!stationGroups.hasLayer(stationArray[i].marker)) {
+          stationGroups.addLayer(stationArray[i].marker);
+          stationGroups.refreshClusters();
+        }
+      }
+    }
+  }else {
+    for(i=0;i<stationCount-1;i++) {
+      if(!stationGroups.hasLayer(stationArray[i].marker)) {
+        stationGroups.addLayer(stationArray[i].marker);
+      }
+    }
+    stationGroups.refreshClusters();
+  }
 };
 
-
 $('#spatialFilter').change(function() {
-  if($('#spatialFilter').prop('checked')) {
+  if ($('#spatialFilter').prop('checked')) {
     spatialFiltering(true);
   } else {
     spatialFiltering(false)
@@ -146,27 +158,24 @@ $('#spatialFilter').change(function() {
 });
 
 $('#temporalFilter').change(function() {
-  if($('#temporalFilter').prop('checked')) {
+  if ($('#temporalFilter').prop('checked')) {
     temporalFiltering(true);
   } else {
     temporalFiltering(false)
   }
 });
 
-
-
 $('#propertyFilter').change(function() {
-  if($('#propertyFilter').prop('checked')) {
-    $('#propSelect').prop('disabled',false);
+  if ($('#propertyFilter').prop('checked')) {
+    $('#propSelect').prop('disabled', false);
     $('#propSelect').on('change', function() {
       propertyFiltering($('#propSelect').val())
     })
   } else {
-    $('#propSelect').prop('disabled',true);
+    $('#propSelect').prop('disabled', true);
     propertyFiltering('RESET')
   }
 });
-
 
 $.ajax({
   url: ndbc_sos,
@@ -195,7 +204,8 @@ $.ajax({
       ], {
         stationID: stationID,
         observedProps: getProperties(observationOfferingList[i].getElementsByTagName("sos:observedProperty")),
-        enabled: true,
+        observedPropsXML: observationOfferingList[i].getElementsByTagName("sos:observedProperty"),
+        enabled: true
       });
 
       const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
@@ -217,7 +227,7 @@ $.ajax({
         }, 150);
 
       })
-      // stationArray.push({marker: stationMarker, id: i-1, detail: stationHTML});
+      stationArray.push({marker: stationMarker, id: i-1, detail: stationHTML});
       stationGroups.addLayer(stationMarker);
     }
 
