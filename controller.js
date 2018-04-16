@@ -94,17 +94,17 @@ function describeStation(stationXML, stationID, propList) {
   var stationInfo = stationXML.children[0].children[0].children[0].children;
   // console.log(stationInfo)
   if (stationInfo.length > 0) {
-    var stationDes = {
-      id: stationID,
-      description: stationInfo[0].innerHTML,
-      name: 'Station-' + stationID,
-      beginTime: -1,
-      endTIme: -1
-    }
-    if (stationInfo.length == 13) {
-      stationDes['beginTime'] = stationInfo[5].children[0].children[0].innerHTML;
-      stationDes['endTime'] = stationInfo[5].children[0].children[1].innerHTML;
-    }
+    // var stationDes = {
+    //   id: stationID,
+    //   description: stationInfo[0].innerHTML,
+    //   name: 'Station-' + stationID,
+    //   beginTime: -1,
+    //   endTIme: -1
+    // }
+    // if (stationInfo.length == 13) {
+    //   stationDes['beginTime'] = stationInfo[5].children[0].children[0].innerHTML;
+    //   stationDes['endTime'] = stationInfo[5].children[0].children[1].innerHTML;
+    // }
     // console.log(stationDes);
     // TODO: optimize next statement by rendering stationXML variable in new tab
     var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr>' + props.join('\n') + '</table>';
@@ -122,27 +122,44 @@ function spatialFiltering(state) {
   // pankaj's code here
 };
 
-function temporalFiltering(state) {
-  if (state) {
-
-  }else {}
-};
-
 L.Control.Sample = L.Control.extend({
   options: {
     // topright, topleft, bottomleft, bottomright
-    position: 'topright'
+    position: 'bottomright'
   },
   initialize: function (options) {
     // constructor
+    L.Util.setOptions(this, options);
   },
   onAdd: function (map) {
     // happens after added to map
+    this.options.map = map;
+
+    // Create a control sliderContainer with a jquery ui slider
+    var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
+    $(sliderContainer).append('<div id="leaflet-slider" style="width:200px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:200px; margin-top:10px;background-color:#FFFFFF"></div></div>');
+    //Prevent map panning/zooming while using the slider
+    $(sliderContainer).mousedown(function () {
+       map.dragging.disable();
+    });
+    $(document).mouseup(function () {
+       map.dragging.enable();
+       //Only show the slider timestamp while using the slider
+       $('#slider-timestamp').html('');
+    });
+
+
   },
   onRemove: function (map) {
     // when removed
   }
 });
+
+function temporalFiltering(state) {
+  if (state) {
+
+  }else {}
+};
 
 L.control.sample = function(id, options) {
   return new L.Control.Sample(id, options);
@@ -229,13 +246,15 @@ $.ajax({
         stationID: stationID,
         observedProps: getProperties(observationOfferingList[i].getElementsByTagName("sos:observedProperty")),
         observedPropsXML: observationOfferingList[i].getElementsByTagName("sos:observedProperty"),
+        beginTime: observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML,
+        endTime: observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML,
         enabled: true
       });
 
       const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
       stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
-        // console.log(e.target.options.observedProps);
+        // console.log(e.target.options.beginTime, e.target.options.endTime);
         var id = this.options.stationID;
         var observedProps = this.options.observedProps
         var popup = e.target.getPopup();
