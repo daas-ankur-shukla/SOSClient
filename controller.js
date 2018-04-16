@@ -122,6 +122,14 @@ function describeStation(stationXML, stationID, propList) {
 
 var co;
 
+function resetMarkers() {
+  for(i=0;i<stationCount-1;i++) {
+    if(!stationGroups.hasLayer(stationArray[i].marker)) {
+      stationGroups.addLayer(stationArray[i].marker);
+    }
+  }
+}
+
 function spatialFiltering(state) {
   // pankaj's code here
 };
@@ -157,12 +165,19 @@ L.Control.TemporalControl = L.Control.extend({
     });
 
     // calculate min and max value for the slider from GetCapabilities
+    this.options.minValue = minDate;
+    this.options.maxValue = maxDate;
 
-
+    return sliderContainer;
   },
+
   onRemove: function (map) {
     // when removed
-  }
+    // add all the markers removed by slider to the stationGroups
+    resetMarkers();
+    $('#leaflet-slider').remove();
+  },
+
 });
 
 L.control.sample = function(id, options) {
@@ -184,11 +199,7 @@ function propertyFiltering(prop) {
       }
     }
   }else {
-    for(i=0;i<stationCount-1;i++) {
-      if(!stationGroups.hasLayer(stationArray[i].marker)) {
-        stationGroups.addLayer(stationArray[i].marker);
-      }
-    }
+    resetMarkers();
     stationGroups.refreshClusters();
   }
 };
@@ -282,7 +293,7 @@ $.ajax({
 
     maxDate = moment();
 
-    console.log(minDate, maxDate);
+    // console.log(minDate, maxDate);
 
     // console.log('adding to layer')
     map.addLayer(stationGroups);
