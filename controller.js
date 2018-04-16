@@ -8,6 +8,8 @@ var markerJSON
 var stationCount
 var stationArray = []
 var stationGroups = L.markerClusterGroup({chunkedLoading: true});
+var minDate = '';
+var maxDate = '';
 
 const obsPropMap = {
   'sea_floor_depth_below_sea_surface': 'Sea Floor Depth Below Sea Surface',
@@ -38,10 +40,12 @@ var map = L.map('map').setView([
   19.228825, 72.854110
 ], 1.5);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+var OSMLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 10
-}).addTo(map);
+});
+
+map.addLayer(OSMLayer);
 
 function getObservationURL(id, property) {
   // console.log(property)
@@ -94,17 +98,17 @@ function describeStation(stationXML, stationID, propList) {
   var stationInfo = stationXML.children[0].children[0].children[0].children;
   // console.log(stationInfo)
   if (stationInfo.length > 0) {
-    var stationDes = {
-      id: stationID,
-      description: stationInfo[0].innerHTML,
-      name: 'Station-' + stationID,
-      beginTime: -1,
-      endTIme: -1
-    }
-    if (stationInfo.length == 13) {
-      stationDes['beginTime'] = stationInfo[5].children[0].children[0].innerHTML;
-      stationDes['endTime'] = stationInfo[5].children[0].children[1].innerHTML;
-    }
+    // var stationDes = {
+    //   id: stationID,
+    //   description: stationInfo[0].innerHTML,
+    //   name: 'Station-' + stationID,
+    //   beginTime: -1,
+    //   endTIme: -1
+    // }
+    // if (stationInfo.length == 13) {
+    //   stationDes['beginTime'] = stationInfo[5].children[0].children[0].innerHTML;
+    //   stationDes['endTime'] = stationInfo[5].children[0].children[1].innerHTML;
+    // }
     // console.log(stationDes);
     // TODO: optimize next statement by rendering stationXML variable in new tab
     var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr>' + props.join('\n') + '</table>';
@@ -118,36 +122,67 @@ function describeStation(stationXML, stationID, propList) {
 
 var co;
 
+function resetMarkers() {
+  for(i=0;i<stationCount-1;i++) {
+    if(!stationGroups.hasLayer(stationArray[i].marker)) {
+      stationGroups.addLayer(stationArray[i].marker);
+    }
+  }
+}
+
 function spatialFiltering(state) {
   // pankaj's code here
 };
 
-function temporalFiltering(state) {
-  if (state) {
-
-  }else {}
-};
-
-L.Control.Sample = L.Control.extend({
+L.Control.TemporalControl = L.Control.extend({
   options: {
     // topright, topleft, bottomleft, bottomright
-    position: 'topright'
+    position: 'bottomleft',
+    cluster: null,
+    minValue: -1,
+    maxValue: -1,
   },
   initialize: function (options) {
     // constructor
+    L.Util.setOptions(this,options);
+    this._cluster = this.options.cluster;
   },
+
   onAdd: function (map) {
     // happens after added to map
+    this.options.map = map;
+
+    var sliderContainer = L.DomUtil.create('div','slider', this._container);
+    $(sliderContainer).append('<div id="leaflet-slider" style="width:200px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:200px; margin-top:10px;background-color:#FFFFFF"></div></div>');
+    //Prevent map panning/zooming while using the slider
+    $(sliderContainer).mousedown(function () {
+        map.dragging.disable();
+    });
+    $(document).mouseup(function () {
+        map.dragging.enable();
+        //Only show the slider timestamp while using the slider
+        $('#slider-timestamp').html('');
+    });
+
+    // calculate min and max value for the slider from GetCapabilities
+    this.options.minValue = minDate;
+    this.options.maxValue = maxDate;
+
+    return sliderContainer;
   },
+
   onRemove: function (map) {
     // when removed
-  }
+    // add all the markers removed by slider to the stationGroups
+    resetMarkers();
+    $('#leaflet-slider').remove();
+  },
+
 });
 
 L.control.sample = function(id, options) {
   return new L.Control.Sample(id, options);
 }
-
 
 
 function propertyFiltering(prop) {
@@ -164,11 +199,7 @@ function propertyFiltering(prop) {
       }
     }
   }else {
-    for(i=0;i<stationCount-1;i++) {
-      if(!stationGroups.hasLayer(stationArray[i].marker)) {
-        stationGroups.addLayer(stationArray[i].marker);
-      }
-    }
+    resetMarkers();
     stationGroups.refreshClusters();
   }
 };
@@ -214,8 +245,8 @@ $.ajax({
     var observationOfferingList = capabilities.children[3].children[0].children;
     // console.log(observationOfferingList)
     stationCount = observationOfferingList.length
-    var stationCoordinates
-    var stationDetails
+    var stationCoordinates;
+    var stationDetails;
     for (i = 1; i < stationCount; i++) {
       var stationHTML = '<p>Station Description: ' + observationOfferingList[i].children[0].innerHTML + '</p>';
       var stationID = observationOfferingList[i].children[1].innerHTML.split(':').pop()
@@ -229,13 +260,18 @@ $.ajax({
         stationID: stationID,
         observedProps: getProperties(observationOfferingList[i].getElementsByTagName("sos:observedProperty")),
         observedPropsXML: observationOfferingList[i].getElementsByTagName("sos:observedProperty"),
+        beginTime: moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML),
+        endTime: moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML),
         enabled: true
       });
 
+      // console.log(moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)<moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML))
+      if(minDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)<minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)
+      // if(maxDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)>minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)
       const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
       stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
-        // console.log(e.target.options.observedProps);
+        // console.log(e.target.options.beginTime, e.target.options.endTime);
         var id = this.options.stationID;
         var observedProps = this.options.observedProps
         var popup = e.target.getPopup();
@@ -254,6 +290,10 @@ $.ajax({
       stationArray.push({marker: stationMarker, id: i-1, detail: stationHTML});
       stationGroups.addLayer(stationMarker);
     }
+
+    maxDate = moment();
+
+    // console.log(minDate, maxDate);
 
     // console.log('adding to layer')
     map.addLayer(stationGroups);
