@@ -8,6 +8,8 @@ var markerJSON
 var stationCount
 var stationArray = []
 var stationGroups = L.markerClusterGroup({chunkedLoading: true});
+var minDate = '';
+var maxDate = '';
 
 const obsPropMap = {
   'sea_floor_depth_below_sea_surface': 'Sea Floor Depth Below Sea Surface',
@@ -38,10 +40,12 @@ var map = L.map('map').setView([
   19.228825, 72.854110
 ], 1.5);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+var OSMLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 10
-}).addTo(map);
+});
+
+map.addLayer(OSMLayer);
 
 function getObservationURL(id, property) {
   // console.log(property)
@@ -122,31 +126,37 @@ function spatialFiltering(state) {
   // pankaj's code here
 };
 
-L.Control.Sample = L.Control.extend({
+L.Control.TemporalControl = L.Control.extend({
   options: {
     // topright, topleft, bottomleft, bottomright
-    position: 'bottomright'
+    position: 'bottomleft',
+    cluster: null,
+    minValue: -1,
+    maxValue: -1,
   },
   initialize: function (options) {
     // constructor
-    L.Util.setOptions(this, options);
+    L.Util.setOptions(this,options);
+    this._cluster = this.options.cluster;
   },
+
   onAdd: function (map) {
     // happens after added to map
     this.options.map = map;
 
-    // Create a control sliderContainer with a jquery ui slider
-    var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
+    var sliderContainer = L.DomUtil.create('div','slider', this._container);
     $(sliderContainer).append('<div id="leaflet-slider" style="width:200px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:200px; margin-top:10px;background-color:#FFFFFF"></div></div>');
     //Prevent map panning/zooming while using the slider
     $(sliderContainer).mousedown(function () {
-       map.dragging.disable();
+        map.dragging.disable();
     });
     $(document).mouseup(function () {
-       map.dragging.enable();
-       //Only show the slider timestamp while using the slider
-       $('#slider-timestamp').html('');
+        map.dragging.enable();
+        //Only show the slider timestamp while using the slider
+        $('#slider-timestamp').html('');
     });
+
+    // calculate min and max value for the slider from GetCapabilities
 
 
   },
@@ -155,16 +165,9 @@ L.Control.Sample = L.Control.extend({
   }
 });
 
-function temporalFiltering(state) {
-  if (state) {
-
-  }else {}
-};
-
 L.control.sample = function(id, options) {
   return new L.Control.Sample(id, options);
 }
-
 
 
 function propertyFiltering(prop) {
@@ -231,8 +234,8 @@ $.ajax({
     var observationOfferingList = capabilities.children[3].children[0].children;
     // console.log(observationOfferingList)
     stationCount = observationOfferingList.length
-    var stationCoordinates
-    var stationDetails
+    var stationCoordinates;
+    var stationDetails;
     for (i = 1; i < stationCount; i++) {
       var stationHTML = '<p>Station Description: ' + observationOfferingList[i].children[0].innerHTML + '</p>';
       var stationID = observationOfferingList[i].children[1].innerHTML.split(':').pop()
@@ -246,11 +249,14 @@ $.ajax({
         stationID: stationID,
         observedProps: getProperties(observationOfferingList[i].getElementsByTagName("sos:observedProperty")),
         observedPropsXML: observationOfferingList[i].getElementsByTagName("sos:observedProperty"),
-        beginTime: observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML,
-        endTime: observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML,
+        beginTime: moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML),
+        endTime: moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML),
         enabled: true
       });
 
+      // console.log(moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)<moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML))
+      if(minDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)<minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)
+      // if(maxDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)>minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)
       const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
       stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
@@ -273,6 +279,10 @@ $.ajax({
       stationArray.push({marker: stationMarker, id: i-1, detail: stationHTML});
       stationGroups.addLayer(stationMarker);
     }
+
+    maxDate = moment();
+
+    console.log(minDate, maxDate);
 
     // console.log('adding to layer')
     map.addLayer(stationGroups);
