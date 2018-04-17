@@ -233,10 +233,19 @@ $('#propertyFilter').change(function() {
 });
 
 //Function to display the sensor readings using plotly and temporal subsetting
-function displayAnalytics() {
+function displayAnalytics(observedProperty) {
   //console.log(stationID)
-  var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty=air_pressure_at_sea_level&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=2018-04-13T00:00Z/2018-04-15T00:00Z'
-  //document.write("I am in displayAnalytics()");
+  console.log(observedProperty)
+  //var currentDate = moment().format('YYYY-MM-DD')
+  var currentDate = moment(currentDate).subtract(1, 'days').format('YYYY-MM-DD')
+  console.log(currentDate)
+  var startDate = moment(currentDate).subtract(10, 'days').format('YYYY-MM-DD')
+  console.log(startDate)
+  var appendTime = 'T00:00Z'
+  //var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty=air_pressure_at_sea_level&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=2018-04-13T00:00Z/2018-04-15T00:00Z'
+  //var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty=air_pressure_at_sea_level&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
+  var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty='+observedProperty+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime='+startDate+appendTime+'/'+currentDate+appendTime
+  console.log(analytics_url)
 //   var trace1 = {
 //   x: [1, 2, 3, 4], 
 //   y: [10, 15, 13, 17], 
@@ -284,6 +293,7 @@ $.ajax({
     };
    var data = [trace1];
    Plotly.newPlot('chart', data);
+   console.log("Chart Displayed")
   }
 
 });
