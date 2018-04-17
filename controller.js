@@ -13,20 +13,24 @@ var stationGroups = L.markerClusterGroup({
     var markers = cluster.getAllChildMarkers();
     var c = ' marker-cluster-';
     var childCount = 0;
-    for(var i=0;i<markers.length;i++){
-      if(markers[i].options.enabled) {
+    for (var i = 0; i < markers.length; i++) {
+      if (markers[i].options.enabled) {
         childCount++;
       }
     }
     if (childCount < 10) {
-			c += 'small';
-		} else if (childCount < 100) {
-			c += 'medium';
-		} else {
-			c += 'large';
-		}
-		return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
-	}
+      c += 'small';
+    } else if (childCount < 100) {
+      c += 'medium';
+    } else {
+      c += 'large';
+    }
+    return new L.DivIcon({
+      html: '<div><span>' + childCount + '</span></div>',
+      className: 'marker-cluster' + c,
+      iconSize: new L.Point(40, 40)
+    });
+  }
 });
 // var stationGroups = L.markerClusterGroup({chunkedLoading: true});
 var minDate = '';
@@ -144,8 +148,8 @@ function describeStation(stationXML, stationID, propList) {
 var co;
 
 function resetMarkers() {
-  for(i=0;i<stationCount-1;i++) {
-    if(!stationGroups.hasLayer(stationArray[i].marker)) {
+  for (i = 0; i < stationCount - 1; i++) {
+    if (!stationGroups.hasLayer(stationArray[i].marker)) {
       stationGroups.addLayer(stationArray[i].marker);
     }
   }
@@ -158,86 +162,85 @@ function spatialFiltering(state) {
 L.Control.TemporalControl = L.Control.extend({
   options: {
     // topright, topleft, bottomleft, bottomright
-    position: 'bottomleft',
-    cluster: null,
-    minValue: minDate,
-    maxValue: maxDate,
+    position: 'topright',
+    minValue: "",
+    maxValue: "",
     layer: null,
-    range: true
+    range: false
   },
-  initialize: function (options) {
+  initialize: function(options) {
     // constructor
-    L.Util.setOptions(this,options);
-    this.options.cluster = stationGroups;
-    this.options.minValue = minDate;
-    this.options.maxValue = maxDate;
+    console.log('slider init called');
+    console.log(this.options);
+    L.Util.setOptions(this, options);
+    console.log(this.options);
   },
 
-  setPosition: function (position) {
-        var map = this._map;
+  setPosition: function(position) {
+    console.log('setposition called')
+    var map = this._map;
 
-        if (map) {
-            map.removeControl(this);
-        }
+    if (map) {
+      map.removeControl(this);
+    }
 
-        this.options.position = position;
+    this.options.position = position;
 
-        if (map) {
-            map.addControl(this);
-        }
-        this.startSlider();
-        return this;
-    },
+    if (map) {
+      map.addControl(this);
+    }
+    this.startSlider();
+    return this;
+  },
 
-  onAdd: function (map) {
+  onAdd: function(map) {
     // happens after added to map
-    this.options.map = map;
-
-    var sliderContainer = L.DomUtil.create('div','slider', this._container);
+    console.log('onadd')
+    console.log(this.options)
+    // this.options.map = map;
+    var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
     $(sliderContainer).append('<div id="leaflet-slider" style="width:200px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:200px; margin-top:10px;background-color:#FFFFFF"></div></div>');
     //Prevent map panning/zooming while using the slider
-    $(sliderContainer).mousedown(function () {
-        map.dragging.disable();
+    $(sliderContainer).mousedown(function() {
+      map.dragging.disable();
     });
-    $(document).mouseup(function () {
-        map.dragging.enable();
-        //Only show the slider timestamp while using the slider
-        $('#slider-timestamp').html('');
+    $(document).mouseup(function() {
+      map.dragging.enable();
+      //Only show the slider timestamp while using the slider
+      $('#slider-timestamp').html('');
     });
-
-    // calculate min and max value for the slider from GetCapabilities
-    this.options.minValue = minDate;
-    this.options.maxValue = maxDate;
 
     return sliderContainer;
   },
 
-  onRemove: function (map) {
+  onRemove: function(map) {
     // when removed
     // add all the markers removed by slider to the stationGroups
+    console.log('onremove')
     resetMarkers();
     $('#leaflet-slider').remove();
   },
 
-  startSlider: function () {
-        _options = this.options;
-        $("#leaflet-slider").slider({
-            range: _options.range,
-            value: _options.minValue.add(1,'day'),
-            min: _options.minValue,
-            max: _options.maxValue.add(1,'day'),
-            step: 1,
-            slide: function (e, ui) {
-                var map = _options.map;
-                console.log(ui.value[0], ui.value[1]);
-
-            }
-        });
-    }
+  startSlider: function() {
+    console.log('startslider')
+    _options = this.options;
+    $("#leaflet-slider").slider({
+      range: _options.range,
+      values: [
+        _options.minValue.add(1, 'day'),
+        moment()
+      ],
+      min: _options.minValue,
+      max: _options.maxValue.add(1, 'day'),
+      step: 1,
+      slide: function(e, ui) {
+        var map = _options.map;
+        console.log(ui.value[0], ui.value[1]);
+      }
+    });
+  }
 
 });
-
-
 
 //  Simple function based on stationArray
 
@@ -262,21 +265,21 @@ L.Control.TemporalControl = L.Control.extend({
 
 // Function based on enabled property
 function propertyFiltering(prop) {
-  if(prop!='RESET') {
-    for(i=0;i<stationCount-1;i++) {
-      if(!isInArray(prop,stationArray[i].marker.options.observedProps)) {
+  if (prop != 'RESET') {
+    for (i = 0; i < stationCount - 1; i++) {
+      if (!isInArray(prop, stationArray[i].marker.options.observedProps)) {
         stationArray[i].marker.options.enabled = false;
         stationGroups.refreshClusters();
-      }else {
-        if(!stationArray[i].marker.options.enabled) {
+      } else {
+        if (!stationArray[i].marker.options.enabled) {
           stationArray[i].marker.options.enabled = true;
           stationGroups.refreshClusters();
         }
       }
     }
-  }else {
-    for(i=0;i<stationCount-1;i++) {
-      if(!stationArray[i].marker.options.enabled){
+  } else {
+    for (i = 0; i < stationCount - 1; i++) {
+      if (!stationArray[i].marker.options.enabled) {
         stationArray[i].marker.options.enabled = true;
       }
     }
@@ -346,8 +349,9 @@ $.ajax({
       });
 
       // console.log(moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML).subtract(1,'day'))
-      if(minDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)<minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)
-      // if(maxDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)>minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)
+      if (minDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML) < minDate)
+        minDate = moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)
+        // if(maxDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)>minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)
       const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
       stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
@@ -367,10 +371,13 @@ $.ajax({
         }, 150);
 
       })
-      stationArray.push({marker: stationMarker, id: i-1, detail: stationHTML});
+      stationArray.push({
+        marker: stationMarker,
+        id: i - 1,
+        detail: stationHTML
+      });
       stationGroups.addLayer(stationMarker);
     }
-
     maxDate = moment();
 
     // console.log(minDate, maxDate);
@@ -383,10 +390,14 @@ $.ajax({
     }
 
     var sliderControl = L.control.temporalController({
-      position: "bottomleft",
-      layer: OSMLayer
+      // topright, topleft, bottomleft, bottomright
+      position: 'topright',
+      minValue: minDate,
+      maxValue: maxDate,
+      layer: OSMLayer,
+      range: true
     });
-
+    console.log('adding slider')
     map.addControl(sliderControl);
 
     sliderControl.startSlider();
