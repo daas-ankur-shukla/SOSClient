@@ -149,10 +149,12 @@ var co;
 
 function resetMarkers() {
   for (i = 0; i < stationCount - 1; i++) {
+    stationArray[i].marker.options.enabled = true;
     if (!stationGroups.hasLayer(stationArray[i].marker)) {
       stationGroups.addLayer(stationArray[i].marker);
     }
   }
+  stationGroups.refreshClusters();
 }
 
 var bb;
@@ -221,18 +223,20 @@ L.Control.TemporalControl = L.Control.extend({
     minValue: "",
     maxValue: "",
     layer: null,
-    range: false
+    range: false,
+    min: 0,
+    max: -1
   },
   initialize: function(options) {
     // constructor
-    console.log('slider init called');
-    console.log(this.options);
+    // console.log('slider init called');
+    // console.log(this.options);
     L.Util.setOptions(this, options);
-    console.log(this.options);
+    // console.log(this.options);
   },
 
   setPosition: function(position) {
-    console.log('setposition called')
+    // console.log('setposition called')
     var map = this._map;
 
     if (map) {
@@ -250,8 +254,8 @@ L.Control.TemporalControl = L.Control.extend({
 
   onAdd: function(map) {
     // happens after added to map
-    console.log('onadd')
-    console.log(this.options)
+    // console.log('onadd')
+    // console.log(this.options)
     // this.options.map = map;
     var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
     $(sliderContainer).append('<div id="leaflet-slider" style="width:200px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:200px; margin-top:10px;background-color:#FFFFFF"></div></div>');
@@ -271,26 +275,48 @@ L.Control.TemporalControl = L.Control.extend({
   onRemove: function(map) {
     // when removed
     // add all the markers removed by slider to the stationGroups
-    console.log('onremove')
+    // console.log('onremove')
     resetMarkers();
     $('#leaflet-slider').remove();
   },
 
   startSlider: function() {
-    console.log('startslider')
+    // console.log('startslider')
     _options = this.options;
     $("#leaflet-slider").slider({
       range: _options.range,
       values: [
-        _options.minValue.add(1, 'day'),
-        moment()
+        0,
+        _options.maxValue.diff(_options.minValue, 'days')
       ],
-      min: _options.minValue,
-      max: _options.maxValue.add(1, 'day'),
-      step: 1,
-      slide: function(e, ui) {
+      min: _options.min,
+      max: _options.max,
+      step:1,
+      stop: function(e, ui) {
         var map = _options.map;
-        console.log(ui.value[0], ui.value[1]);
+        var low = ui.values[0];
+        var high = ui.values[1];
+        console.log(low, high);
+        console.log(low==_options.min && high==_options.max)
+        if(low==_options.min && high==_options.max){
+          // console.log('resetting')
+          resetMarkers();
+        }else {
+          var dateValMin = _options.minValue.add(low,'days');
+          var dateValMax = _options.maxValue.subtract(high,'days');
+          // console.log(dateValMin,dateValMax);
+          for (i = 0; i < stationCount - 1; i++) {
+            if (!(stationArray[i].marker.options.beginTime>dateValMin && stationArray[i].marker.options.endTime<dateValMax)) {
+              stationArray[i].marker.options.enabled = false;
+              stationGroups.refreshClusters();
+            } else {
+              if (!stationArray[i].marker.options.enabled) {
+                stationArray[i].marker.options.enabled = true;
+                stationGroups.refreshClusters();
+              }
+            }
+          }
+        }
       }
     });
   }
@@ -450,9 +476,11 @@ $.ajax({
       minValue: minDate,
       maxValue: maxDate,
       layer: OSMLayer,
-      range: true
+      range: true,
+      min: 0,
+      max: maxDate.diff(minDate, 'days')
     });
-    console.log('adding slider')
+    // console.log('adding slider')
     map.addControl(sliderControl);
 
     sliderControl.startSlider();
