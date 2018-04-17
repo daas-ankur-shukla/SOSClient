@@ -155,9 +155,64 @@ function resetMarkers() {
   }
 }
 
-function spatialFiltering(state) {
-  // pankaj's code here
-};
+var bb;
+var drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+var drawControl = new L.Control.Draw({
+  draw: {
+    rect: {
+      shapeOptions: {
+        color: 'green'
+      }
+    },
+    circle: false,
+    polyline: false,
+    polygon: false,
+    marker: false
+  },
+  edit: {
+    featureGroup: drawnItems,
+    remove: false
+  }
+});
+map.addControl(drawControl);
+map.on('draw:created', function(e) {
+  var type = e.layerType,
+    layer = e.layer;
+  if (type === 'rectangle') {
+    layer.on('mouseover', function() {
+      bb = layer.getLatLngs();
+      var currBb = document.getElementById("bb");
+      console.log(bb[0]);
+      currBb.innerHTML = "<br><br>&nbsp;&nbsp;Bounding Box: (Lat, Lon)<br>&nbsp;&nbsp;LL: (" + bb[0][0].lat + ", " + bb[0][0].lng + "),<br>&nbsp;&nbsp;UL: (" + bb[0][1].lat + ", " + bb[0][1].lng + "),<br>&nbsp;&nbsp;UR: (" + bb[0][2].lat + ", " + bb[0][2].lng + "),<br>&nbsp;&nbsp;LR: (" + bb[0][3].lat + ", " + bb[0][3].lng + ")";
+      console.log(bb);
+    });
+  }
+  drawnItems.addLayer(layer);
+});
+map.on('mousemove', function(e) {
+  var currLatLon = document.getElementById("mouseLatLon");
+  currLatLon.innerHTML = "&nbsp;&nbsp;Mouse Position:<br>&nbsp;&nbsp;Lat: " + e.latlng.lat + ", Lon: " + e.latlng.lng;
+});
+L.Control.RemoveAll = L.Control.extend({
+  options: {
+    position: 'topleft'
+  },
+  onAdd: function(map) {
+    var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
+    L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation).addListener(controlDiv, 'click', L.DomEvent.preventDefault).addListener(controlDiv, 'click', function() {
+      drawnItems.clearLayers();
+      var currBb = document.getElementById("bb");
+      currBb.innerHTML = "";
+    });
+    var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
+    controlUI.title = 'Remove All Polygons';
+    controlUI.href = '#';
+    return controlDiv;
+  }
+});
+var removeAllControl = new L.Control.RemoveAll();
+map.addControl(removeAllControl);
 
 L.Control.TemporalControl = L.Control.extend({
   options: {
