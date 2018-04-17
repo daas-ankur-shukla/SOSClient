@@ -61,7 +61,9 @@ function isInArray(value, array) {
 // }
 
 var stationMarker
-var map = L.map('map').setView([
+var map = L.map('map', {
+  minZoom: 2
+}).setView([
   19.228825, 72.854110
 ], 1.5);
 
@@ -182,19 +184,30 @@ map.on('draw:created', function(e) {
   var type = e.layerType,
     layer = e.layer;
   if (type === 'rectangle') {
-    layer.on('mouseover', function() {
-      bb = layer.getLatLngs();
-      var currBb = document.getElementById("bb");
-      console.log(bb[0]);
-      currBb.innerHTML = "<br><br>&nbsp;&nbsp;Bounding Box: (Lat, Lon)<br>&nbsp;&nbsp;LL: (" + bb[0][0].lat + ", " + bb[0][0].lng + "),<br>&nbsp;&nbsp;UL: (" + bb[0][1].lat + ", " + bb[0][1].lng + "),<br>&nbsp;&nbsp;UR: (" + bb[0][2].lat + ", " + bb[0][2].lng + "),<br>&nbsp;&nbsp;LR: (" + bb[0][3].lat + ", " + bb[0][3].lng + ")";
-      console.log(bb);
-    });
+    // layer.on('mouseover', function() {
+    //   bb = layer.getLatLngs();
+    //   var currBb = document.getElementById("bb");
+    //   console.log(bb[0]);
+    //   // currBb.innerHTML = "<br><br>&nbsp;&nbsp;Bounding Box: (Lat, Lon)<br>&nbsp;&nbsp;LL: (" + bb[0][0].lat + ", " + bb[0][0].lng + "),<br>&nbsp;&nbsp;UL: (" + bb[0][1].lat + ", " + bb[0][1].lng + "),<br>&nbsp;&nbsp;UR: (" + bb[0][2].lat + ", " + bb[0][2].lng + "),<br>&nbsp;&nbsp;LR: (" + bb[0][3].lat + ", " + bb[0][3].lng + ")";
+    //   console.log(bb);
+    // });
+    bb = layer.getLatLngs();
+    var currBb = document.getElementById("bb");
+    // console.log(bb[0]);
+    // currBb.innerHTML = "<br><br>&nbsp;&nbsp;Bounding Box: (Lat, Lon)<br>&nbsp;&nbsp;LL: (" + bb[0][0].lat + ", " + bb[0][0].lng + "),<br>&nbsp;&nbsp;UL: (" + bb[0][1].lat + ", " + bb[0][1].lng + "),<br>&nbsp;&nbsp;UR: (" + bb[0][2].lat + ", " + bb[0][2].lng + "),<br>&nbsp;&nbsp;LR: (" + bb[0][3].lat + ", " + bb[0][3].lng + ")";
+    // console.log(bb);
+    for(var i=0;i<stationCount-1;i++) {
+      latlong = [stationArray[i].marker.getLatLng()];
+      console.log(latlong[0].lat<bb[0][1].lat, latlong[0].lng>bb[0][1].lng, latlong[0].lat>bb[0][3].lat, latlong[0].lng<bb[0][3].lng)
+      if(!(latlong[0].lat<bb[0][1].lat && latlong[0].lng>bb[0][1].lng && latlong[0].lat>bb[0][3].lat && latlong[0].lng<bb[0][3].lng)) {
+        stationArray[i].marker.options.enabled = false;
+      }else {
+        stationArray[i].marker.options.enabled = true;
+      }
+      stationGroups.refreshClusters();
+    }
   }
   drawnItems.addLayer(layer);
-});
-map.on('mousemove', function(e) {
-  var currLatLon = document.getElementById("mouseLatLon");
-  currLatLon.innerHTML = "&nbsp;&nbsp;Mouse Position:<br>&nbsp;&nbsp;Lat: " + e.latlng.lat + ", Lon: " + e.latlng.lng;
 });
 L.Control.RemoveAll = L.Control.extend({
   options: {
@@ -296,8 +309,8 @@ L.Control.TemporalControl = L.Control.extend({
         var map = _options.map;
         var low = ui.values[0];
         var high = ui.values[1];
-        console.log(low, high);
-        console.log(low==_options.min && high==_options.max)
+        // console.log(low, high);
+        // console.log(low==_options.min && high==_options.max)
         if(low==_options.min && high==_options.max){
           // console.log('resetting')
           resetMarkers();
@@ -308,13 +321,12 @@ L.Control.TemporalControl = L.Control.extend({
           for (i = 0; i < stationCount - 1; i++) {
             if (!(stationArray[i].marker.options.beginTime>dateValMin && stationArray[i].marker.options.endTime<dateValMax)) {
               stationArray[i].marker.options.enabled = false;
-              stationGroups.refreshClusters();
             } else {
               if (!stationArray[i].marker.options.enabled) {
                 stationArray[i].marker.options.enabled = true;
-                stationGroups.refreshClusters();
               }
             }
+            stationGroups.refreshClusters();
           }
         }
       }
@@ -368,32 +380,8 @@ function propertyFiltering(prop) {
   }
 };
 
-$('#spatialFilter').change(function() {
-  if ($('#spatialFilter').prop('checked')) {
-    spatialFiltering(true);
-  } else {
-    spatialFiltering(false)
-  }
-});
-
-$('#temporalFilter').change(function() {
-  if ($('#temporalFilter').prop('checked')) {
-    temporalFiltering(true);
-  } else {
-    temporalFiltering(false)
-  }
-});
-
-$('#propertyFilter').change(function() {
-  if ($('#propertyFilter').prop('checked')) {
-    $('#propSelect').prop('disabled', false);
-    $('#propSelect').on('change', function() {
-      propertyFiltering($('#propSelect').val())
-    })
-  } else {
-    $('#propSelect').prop('disabled', true);
-    propertyFiltering('RESET')
-  }
+$('#propSelect').on('change', function() {
+  propertyFiltering($('#propSelect').val())
 });
 
 $.ajax({
