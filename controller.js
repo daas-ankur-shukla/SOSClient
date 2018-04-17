@@ -198,7 +198,7 @@ map.on('draw:created', function(e) {
     // console.log(bb);
     for(var i=0;i<stationCount-1;i++) {
       latlong = [stationArray[i].marker.getLatLng()];
-      console.log(latlong[0].lat<bb[0][1].lat, latlong[0].lng>bb[0][1].lng, latlong[0].lat>bb[0][3].lat, latlong[0].lng<bb[0][3].lng)
+      // console.log(latlong[0].lat<bb[0][1].lat, latlong[0].lng>bb[0][1].lng, latlong[0].lat>bb[0][3].lat, latlong[0].lng<bb[0][3].lng)
       if(!(latlong[0].lat<bb[0][1].lat && latlong[0].lng>bb[0][1].lng && latlong[0].lat>bb[0][3].lat && latlong[0].lng<bb[0][3].lng)) {
         stationArray[i].marker.options.enabled = false;
       }else {
@@ -217,8 +217,6 @@ L.Control.RemoveAll = L.Control.extend({
     var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
     L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation).addListener(controlDiv, 'click', L.DomEvent.preventDefault).addListener(controlDiv, 'click', function() {
       drawnItems.clearLayers();
-      var currBb = document.getElementById("bb");
-      currBb.innerHTML = "";
     });
     var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
     controlUI.title = 'Remove All Polygons';
