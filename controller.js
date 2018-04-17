@@ -7,7 +7,34 @@ var GetCapabilitiesXML
 var markerJSON
 var stationCount
 var stationArray = []
-var stationGroups = L.markerClusterGroup({chunkedLoading: true});
+var stationGroups = L.markerClusterGroup({
+  chunkedLoading: true,
+  iconCreateFunction: function(cluster) {
+    var markers = cluster.getAllChildMarkers();
+    var c = ' marker-cluster-';
+    var childCount = 0;
+    for (var i = 0; i < markers.length; i++) {
+      if (markers[i].options.enabled) {
+        childCount++;
+      }
+    }
+    if (childCount < 10) {
+      c += 'small';
+    } else if (childCount < 100) {
+      c += 'medium';
+    } else {
+      c += 'large';
+    }
+    return new L.DivIcon({
+      html: '<div><span>' + childCount + '</span></div>',
+      className: 'marker-cluster' + c,
+      iconSize: new L.Point(40, 40)
+    });
+  }
+});
+// var stationGroups = L.markerClusterGroup({chunkedLoading: true});
+var minDate = '';
+var maxDate = '';
 
 const obsPropMap = {
   'sea_floor_depth_below_sea_surface': 'Sea Floor Depth Below Sea Surface',
@@ -38,10 +65,12 @@ var map = L.map('map').setView([
   19.228825, 72.854110
 ], 1.5);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+var OSMLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 10
-}).addTo(map);
+});
+
+map.addLayer(OSMLayer);
 
 function getObservationURL(id, property) {
   // console.log(property)
@@ -94,17 +123,17 @@ function describeStation(stationXML, stationID, propList) {
   var stationInfo = stationXML.children[0].children[0].children[0].children;
   // console.log(stationInfo)
   if (stationInfo.length > 0) {
-    var stationDes = {
-      id: stationID,
-      description: stationInfo[0].innerHTML,
-      name: 'Station-' + stationID,
-      beginTime: -1,
-      endTIme: -1
-    }
-    if (stationInfo.length == 13) {
-      stationDes['beginTime'] = stationInfo[5].children[0].children[0].innerHTML;
-      stationDes['endTime'] = stationInfo[5].children[0].children[1].innerHTML;
-    }
+    // var stationDes = {
+    //   id: stationID,
+    //   description: stationInfo[0].innerHTML,
+    //   name: 'Station-' + stationID,
+    //   beginTime: -1,
+    //   endTIme: -1
+    // }
+    // if (stationInfo.length == 13) {
+    //   stationDes['beginTime'] = stationInfo[5].children[0].children[0].innerHTML;
+    //   stationDes['endTime'] = stationInfo[5].children[0].children[1].innerHTML;
+    // }
     // console.log(stationDes);
     // TODO: optimize next statement by rendering stationXML variable in new tab
     var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr>' + props.join('\n') + '</table>';
@@ -118,55 +147,166 @@ function describeStation(stationXML, stationID, propList) {
 
 var co;
 
+function resetMarkers() {
+  for (i = 0; i < stationCount - 1; i++) {
+    stationArray[i].marker.options.enabled = true;
+    if (!stationGroups.hasLayer(stationArray[i].marker)) {
+      stationGroups.addLayer(stationArray[i].marker);
+    }
+  }
+  stationGroups.refreshClusters();
+}
+
 function spatialFiltering(state) {
   // pankaj's code here
 };
 
-function temporalFiltering(state) {
-  if (state) {
-
-  }else {}
-};
-
-L.Control.Sample = L.Control.extend({
+L.Control.TemporalControl = L.Control.extend({
   options: {
     // topright, topleft, bottomleft, bottomright
-    position: 'topright'
+    position: 'topright',
+    minValue: "",
+    maxValue: "",
+    layer: null,
+    range: false,
+    min: 0,
+    max: -1
   },
-  initialize: function (options) {
+  initialize: function(options) {
     // constructor
+    // console.log('slider init called');
+    // console.log(this.options);
+    L.Util.setOptions(this, options);
+    // console.log(this.options);
   },
-  onAdd: function (map) {
+
+  setPosition: function(position) {
+    // console.log('setposition called')
+    var map = this._map;
+
+    if (map) {
+      map.removeControl(this);
+    }
+
+    this.options.position = position;
+
+    if (map) {
+      map.addControl(this);
+    }
+    this.startSlider();
+    return this;
+  },
+
+  onAdd: function(map) {
     // happens after added to map
+    // console.log('onadd')
+    // console.log(this.options)
+    // this.options.map = map;
+    var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
+    $(sliderContainer).append('<div id="leaflet-slider" style="width:200px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:200px; margin-top:10px;background-color:#FFFFFF"></div></div>');
+    //Prevent map panning/zooming while using the slider
+    $(sliderContainer).mousedown(function() {
+      map.dragging.disable();
+    });
+    $(document).mouseup(function() {
+      map.dragging.enable();
+      //Only show the slider timestamp while using the slider
+      $('#slider-timestamp').html('');
+    });
+
+    return sliderContainer;
   },
-  onRemove: function (map) {
+
+  onRemove: function(map) {
     // when removed
+    // add all the markers removed by slider to the stationGroups
+    // console.log('onremove')
+    resetMarkers();
+    $('#leaflet-slider').remove();
+  },
+
+  startSlider: function() {
+    // console.log('startslider')
+    _options = this.options;
+    $("#leaflet-slider").slider({
+      range: _options.range,
+      values: [
+        0,
+        _options.maxValue.diff(_options.minValue, 'days')
+      ],
+      min: _options.min,
+      max: _options.max,
+      step:1,
+      stop: function(e, ui) {
+        var map = _options.map;
+        var low = ui.values[0];
+        var high = ui.values[1];
+        console.log(low, high);
+        console.log(low==_options.min && high==_options.max)
+        if(low==_options.min && high==_options.max){
+          // console.log('resetting')
+          resetMarkers();
+        }else {
+          var dateValMin = _options.minValue.add(low,'days');
+          var dateValMax = _options.maxValue.subtract(high,'days');
+          // console.log(dateValMin,dateValMax);
+          for (i = 0; i < stationCount - 1; i++) {
+            if (!(stationArray[i].marker.options.beginTime>dateValMin && stationArray[i].marker.options.endTime<dateValMax)) {
+              stationArray[i].marker.options.enabled = false;
+              stationGroups.refreshClusters();
+            } else {
+              if (!stationArray[i].marker.options.enabled) {
+                stationArray[i].marker.options.enabled = true;
+                stationGroups.refreshClusters();
+              }
+            }
+          }
+        }
+      }
+    });
   }
+
 });
 
-L.control.sample = function(id, options) {
-  return new L.Control.Sample(id, options);
-}
+//  Simple function based on stationArray
 
+// function propertyFiltering(prop) {
+//   if(prop!='RESET') {
+//     for(i=0;i<stationCount-1;i++) {
+//       if(!isInArray(prop,stationArray[i].marker.options.observedProps)) {
+//         stationGroups.removeLayer(stationArray[i].marker);
+//         stationGroups.refreshClusters();
+//       }else {
+//         if(!stationGroups.hasLayer(stationArray[i].marker)) {
+//           stationGroups.addLayer(stationArray[i].marker);
+//           stationGroups.refreshClusters();
+//         }
+//       }
+//     }
+//   }else {
+//     resetMarkers();
+//     stationGroups.refreshClusters();
+//   }
+// };
 
-
+// Function based on enabled property
 function propertyFiltering(prop) {
-  if(prop!='RESET') {
-    for(i=0;i<stationCount-1;i++) {
-      if(!isInArray(prop,stationArray[i].marker.options.observedProps)) {
-        stationGroups.removeLayer(stationArray[i].marker);
+  if (prop != 'RESET') {
+    for (i = 0; i < stationCount - 1; i++) {
+      if (!isInArray(prop, stationArray[i].marker.options.observedProps)) {
+        stationArray[i].marker.options.enabled = false;
         stationGroups.refreshClusters();
-      }else {
-        if(!stationGroups.hasLayer(stationArray[i].marker)) {
-          stationGroups.addLayer(stationArray[i].marker);
+      } else {
+        if (!stationArray[i].marker.options.enabled) {
+          stationArray[i].marker.options.enabled = true;
           stationGroups.refreshClusters();
         }
       }
     }
-  }else {
-    for(i=0;i<stationCount-1;i++) {
-      if(!stationGroups.hasLayer(stationArray[i].marker)) {
-        stationGroups.addLayer(stationArray[i].marker);
+  } else {
+    for (i = 0; i < stationCount - 1; i++) {
+      if (!stationArray[i].marker.options.enabled) {
+        stationArray[i].marker.options.enabled = true;
       }
     }
     stationGroups.refreshClusters();
@@ -214,8 +354,8 @@ $.ajax({
     var observationOfferingList = capabilities.children[3].children[0].children;
     // console.log(observationOfferingList)
     stationCount = observationOfferingList.length
-    var stationCoordinates
-    var stationDetails
+    var stationCoordinates;
+    var stationDetails;
     for (i = 1; i < stationCount; i++) {
       var stationHTML = '<p>Station Description: ' + observationOfferingList[i].children[0].innerHTML + '</p>';
       var stationID = observationOfferingList[i].children[1].innerHTML.split(':').pop()
@@ -229,13 +369,19 @@ $.ajax({
         stationID: stationID,
         observedProps: getProperties(observationOfferingList[i].getElementsByTagName("sos:observedProperty")),
         observedPropsXML: observationOfferingList[i].getElementsByTagName("sos:observedProperty"),
+        beginTime: moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML),
+        endTime: moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML),
         enabled: true
       });
 
+      // console.log(moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML).subtract(1,'day'))
+      if (minDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML) < minDate)
+        minDate = moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)
+        // if(maxDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)>minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)
       const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
       stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
-        // console.log(e.target.options.observedProps);
+        // console.log(e.target.options.beginTime, e.target.options.endTime);
         var id = this.options.stationID;
         var observedProps = this.options.observedProps
         var popup = e.target.getPopup();
@@ -251,12 +397,38 @@ $.ajax({
         }, 150);
 
       })
-      stationArray.push({marker: stationMarker, id: i-1, detail: stationHTML});
+      stationArray.push({
+        marker: stationMarker,
+        id: i - 1,
+        detail: stationHTML
+      });
       stationGroups.addLayer(stationMarker);
     }
+    maxDate = moment();
+
+    // console.log(minDate, maxDate);
 
     // console.log('adding to layer')
     map.addLayer(stationGroups);
+
+    L.control.temporalController = function(id, options) {
+      return new L.Control.TemporalControl(id, options);
+    }
+
+    var sliderControl = L.control.temporalController({
+      // topright, topleft, bottomleft, bottomright
+      position: 'topright',
+      minValue: minDate,
+      maxValue: maxDate,
+      layer: OSMLayer,
+      range: true,
+      min: 0,
+      max: maxDate.diff(minDate, 'days')
+    });
+    // console.log('adding slider')
+    map.addControl(sliderControl);
+
+    sliderControl.startSlider();
   },
   error: function(xhr, staus, error) {
     console.log('error in ajax', status, error);
