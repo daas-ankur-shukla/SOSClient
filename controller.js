@@ -232,6 +232,64 @@ $('#propertyFilter').change(function() {
   }
 });
 
+//Function to display the sensor readings using plotly and temporal subsetting
+function displayAnalytics() {
+  //console.log(stationID)
+  var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty=air_pressure_at_sea_level&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=2018-04-13T00:00Z/2018-04-15T00:00Z'
+  //document.write("I am in displayAnalytics()");
+//   var trace1 = {
+//   x: [1, 2, 3, 4], 
+//   y: [10, 15, 13, 17], 
+//   type: 'lines'
+// };
+// var trace2 = {
+//   x: [1, 2, 3, 4], 
+//   y: [16, 5, 11, 9], 
+//   type: 'lines'
+// };
+// var data = [trace1, trace2];
+// Plotly.newPlot('charts', data);
+$.ajax({
+  url: analytics_url,
+  datatype: 'text',
+  success: function(result){
+    //console.log(result)
+    temporalXML = StringToXMLDom(result);
+    //console.log(temporalXML)
+    //Change it for corresponding station by including the station id
+    var observationTag = result.getElementsByTagName('om:Observation')[0]
+    //console.log(observationTag)
+    var observationList = observationTag.children[5];
+    //console.log(observationList)
+    var sensorValues = observationList.children[0].children[2];
+    sensorValues = sensorValues.innerHTML.split('\n')
+    //console.log(sensorValues[0])
+    //console.log(sensorValues[0].split(',')[2])
+    sensorValuesLength = sensorValues.length
+    //console.log(sensorValuesLength)
+    var xAxes = []; 
+    var yAxes = [];
+    for (i=0; i<sensorValuesLength-1; i++) {
+      
+      xAxes.push(sensorValues[i].split(',')[0]);
+      console.log(xAxes)
+      yAxes.push(sensorValues[i].split(',')[2]);
+      console.log(yAxes)
+    }  
+
+    var trace1 = {
+     x: xAxes,
+     y: yAxes,
+     type: 'lines'
+    };
+   var data = [trace1];
+   Plotly.newPlot('chart', data);
+  }
+
+});
+}
+
+
 $.ajax({
   url: ndbc_sos,
   dataType: 'text',
@@ -297,6 +355,33 @@ $.ajax({
 
     // console.log('adding to layer')
     map.addLayer(stationGroups);
+    //Code for gauges onWebsiteLoad
+    google.charts.load('current', {packages: ['gauge']});
+    google.charts.setOnLoadCallback(function() {
+      var data = google.visualization.arrayToDataTable([
+        ['Label', 'Value'],
+        ['Sea Floor Depth Below Sea Surface', 80],
+        ['Air Pressure At Sea Level', 55],
+        ['Sea Water Temperature', 68],
+        ['Sea Water Salinity', 28],
+        ['Air Temperature', 38],
+        ['Currents', 98],
+        ['Waves', 18],
+        ['Winds', 78]
+      ]);
+      console.log(stationArray[0]);
+
+      var options = {
+        width: 400, height: 120,
+        redFrom: 90, redTo: 100,
+        yellowFrom:75, yellowTo: 90,
+        minorTicks: 5
+      };
+
+      var chart = new google.visualization.Gauge(document.getElementById('gauges'));
+
+      chart.draw(data, options);
+    })
   },
   error: function(xhr, staus, error) {
     console.log('error in ajax', status, error);
