@@ -7,18 +7,28 @@ var GetCapabilitiesXML
 var markerJSON
 var stationCount
 var stationArray = []
-// var stationGroups = L.markerClusterGroup({
-//   chunkedLoading: true,
-//   iconCreateFunction: function(cluster) {
-//     var markers = cluster.getAllChildMarkers();
-//     var n = 0;
-//     for(var i=0;i<markers.length;i++){
-//       if(markers[i].options.enabled) n++;
-//     }
-// 		return L.divIcon({ html: '<b>' + n + '</b>' });
-// 	}
-// });
-var stationGroups = L.markerClusterGroup({chunkedLoading: true});
+var stationGroups = L.markerClusterGroup({
+  chunkedLoading: true,
+  iconCreateFunction: function(cluster) {
+    var markers = cluster.getAllChildMarkers();
+    var c = ' marker-cluster-';
+    var childCount = 0;
+    for(var i=0;i<markers.length;i++){
+      if(markers[i].options.enabled) {
+        childCount++;
+      }
+    }
+    if (childCount < 10) {
+			c += 'small';
+		} else if (childCount < 100) {
+			c += 'medium';
+		} else {
+			c += 'large';
+		}
+		return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+	}
+});
+// var stationGroups = L.markerClusterGroup({chunkedLoading: true});
 var minDate = '';
 var maxDate = '';
 
@@ -229,22 +239,47 @@ L.Control.TemporalControl = L.Control.extend({
 
 
 
+//  Simple function based on stationArray
 
+// function propertyFiltering(prop) {
+//   if(prop!='RESET') {
+//     for(i=0;i<stationCount-1;i++) {
+//       if(!isInArray(prop,stationArray[i].marker.options.observedProps)) {
+//         stationGroups.removeLayer(stationArray[i].marker);
+//         stationGroups.refreshClusters();
+//       }else {
+//         if(!stationGroups.hasLayer(stationArray[i].marker)) {
+//           stationGroups.addLayer(stationArray[i].marker);
+//           stationGroups.refreshClusters();
+//         }
+//       }
+//     }
+//   }else {
+//     resetMarkers();
+//     stationGroups.refreshClusters();
+//   }
+// };
+
+// Function based on enabled property
 function propertyFiltering(prop) {
   if(prop!='RESET') {
     for(i=0;i<stationCount-1;i++) {
       if(!isInArray(prop,stationArray[i].marker.options.observedProps)) {
-        stationGroups.removeLayer(stationArray[i].marker);
+        stationArray[i].marker.options.enabled = false;
         stationGroups.refreshClusters();
       }else {
-        if(!stationGroups.hasLayer(stationArray[i].marker)) {
-          stationGroups.addLayer(stationArray[i].marker);
+        if(!stationArray[i].marker.options.enabled) {
+          stationArray[i].marker.options.enabled = true;
           stationGroups.refreshClusters();
         }
       }
     }
   }else {
-    resetMarkers();
+    for(i=0;i<stationCount-1;i++) {
+      if(!stationArray[i].marker.options.enabled){
+        stationArray[i].marker.options.enabled = true;
+      }
+    }
     stationGroups.refreshClusters();
   }
 };
