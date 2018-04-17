@@ -7,7 +7,32 @@ var GetCapabilitiesXML
 var markerJSON
 var stationCount
 var stationArray = []
-var stationGroups = L.markerClusterGroup({chunkedLoading: true});
+var stationGroups = L.markerClusterGroup({
+  chunkedLoading: true,
+  iconCreateFunction: function(cluster) {
+    var markers = cluster.getAllChildMarkers();
+    var c = ' marker-cluster-';
+    var childCount = 0;
+    for (var i = 0; i < markers.length; i++) {
+      if (markers[i].options.enabled) {
+        childCount++;
+      }
+    }
+    if (childCount < 10) {
+      c += 'small';
+    } else if (childCount < 100) {
+      c += 'medium';
+    } else {
+      c += 'large';
+    }
+    return new L.DivIcon({
+      html: '<div><span>' + childCount + '</span></div>',
+      className: 'marker-cluster' + c,
+      iconSize: new L.Point(40, 40)
+    });
+  }
+});
+// var stationGroups = L.markerClusterGroup({chunkedLoading: true});
 var minDate = '';
 var maxDate = '';
 
@@ -36,7 +61,9 @@ function isInArray(value, array) {
 // }
 
 var stationMarker
-var map = L.map('map').setView([
+var map = L.map('map', {
+  minZoom: 2
+}).setView([
   19.228825, 72.854110
 ], 1.5);
 
@@ -123,113 +150,238 @@ function describeStation(stationXML, stationID, propList) {
 var co;
 
 function resetMarkers() {
-  for(i=0;i<stationCount-1;i++) {
-    if(!stationGroups.hasLayer(stationArray[i].marker)) {
+  for (i = 0; i < stationCount - 1; i++) {
+    stationArray[i].marker.options.enabled = true;
+    if (!stationGroups.hasLayer(stationArray[i].marker)) {
       stationGroups.addLayer(stationArray[i].marker);
     }
   }
+  stationGroups.refreshClusters();
 }
 
-function spatialFiltering(state) {
-  // pankaj's code here
-};
+var bb;
+var drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+var drawControl = new L.Control.Draw({
+  draw: {
+    rect: {
+      shapeOptions: {
+        color: 'green'
+      }
+    },
+    circle: false,
+    polyline: false,
+    polygon: false,
+    marker: false
+  },
+  edit: {
+    featureGroup: drawnItems,
+    remove: false
+  }
+});
+map.addControl(drawControl);
+map.on('draw:created', function(e) {
+  var type = e.layerType,
+    layer = e.layer;
+  if (type === 'rectangle') {
+    // layer.on('mouseover', function() {
+    //   bb = layer.getLatLngs();
+    //   var currBb = document.getElementById("bb");
+    //   console.log(bb[0]);
+    //   // currBb.innerHTML = "<br><br>&nbsp;&nbsp;Bounding Box: (Lat, Lon)<br>&nbsp;&nbsp;LL: (" + bb[0][0].lat + ", " + bb[0][0].lng + "),<br>&nbsp;&nbsp;UL: (" + bb[0][1].lat + ", " + bb[0][1].lng + "),<br>&nbsp;&nbsp;UR: (" + bb[0][2].lat + ", " + bb[0][2].lng + "),<br>&nbsp;&nbsp;LR: (" + bb[0][3].lat + ", " + bb[0][3].lng + ")";
+    //   console.log(bb);
+    // });
+    bb = layer.getLatLngs();
+    var currBb = document.getElementById("bb");
+    // console.log(bb[0]);
+    // currBb.innerHTML = "<br><br>&nbsp;&nbsp;Bounding Box: (Lat, Lon)<br>&nbsp;&nbsp;LL: (" + bb[0][0].lat + ", " + bb[0][0].lng + "),<br>&nbsp;&nbsp;UL: (" + bb[0][1].lat + ", " + bb[0][1].lng + "),<br>&nbsp;&nbsp;UR: (" + bb[0][2].lat + ", " + bb[0][2].lng + "),<br>&nbsp;&nbsp;LR: (" + bb[0][3].lat + ", " + bb[0][3].lng + ")";
+    // console.log(bb);
+    for(var i=0;i<stationCount-1;i++) {
+      latlong = [stationArray[i].marker.getLatLng()];
+      console.log(latlong[0].lat<bb[0][1].lat, latlong[0].lng>bb[0][1].lng, latlong[0].lat>bb[0][3].lat, latlong[0].lng<bb[0][3].lng)
+      if(!(latlong[0].lat<bb[0][1].lat && latlong[0].lng>bb[0][1].lng && latlong[0].lat>bb[0][3].lat && latlong[0].lng<bb[0][3].lng)) {
+        stationArray[i].marker.options.enabled = false;
+      }else {
+        stationArray[i].marker.options.enabled = true;
+      }
+      stationGroups.refreshClusters();
+    }
+  }
+  drawnItems.addLayer(layer);
+});
+L.Control.RemoveAll = L.Control.extend({
+  options: {
+    position: 'topleft'
+  },
+  onAdd: function(map) {
+    var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
+    L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation).addListener(controlDiv, 'click', L.DomEvent.preventDefault).addListener(controlDiv, 'click', function() {
+      drawnItems.clearLayers();
+      var currBb = document.getElementById("bb");
+      currBb.innerHTML = "";
+    });
+    var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
+    controlUI.title = 'Remove All Polygons';
+    controlUI.href = '#';
+    return controlDiv;
+  }
+});
+var removeAllControl = new L.Control.RemoveAll();
+map.addControl(removeAllControl);
 
 L.Control.TemporalControl = L.Control.extend({
   options: {
     // topright, topleft, bottomleft, bottomright
-    position: 'bottomleft',
-    cluster: null,
-    minValue: -1,
-    maxValue: -1,
+    position: 'topright',
+    minValue: "",
+    maxValue: "",
+    layer: null,
+    range: false,
+    min: 0,
+    max: -1
   },
-  initialize: function (options) {
+  initialize: function(options) {
     // constructor
-    L.Util.setOptions(this,options);
-    this._cluster = this.options.cluster;
+    // console.log('slider init called');
+    // console.log(this.options);
+    L.Util.setOptions(this, options);
+    // console.log(this.options);
   },
 
-  onAdd: function (map) {
-    // happens after added to map
-    this.options.map = map;
+  setPosition: function(position) {
+    // console.log('setposition called')
+    var map = this._map;
 
-    var sliderContainer = L.DomUtil.create('div','slider', this._container);
+    if (map) {
+      map.removeControl(this);
+    }
+
+    this.options.position = position;
+
+    if (map) {
+      map.addControl(this);
+    }
+    this.startSlider();
+    return this;
+  },
+
+  onAdd: function(map) {
+    // happens after added to map
+    // console.log('onadd')
+    // console.log(this.options)
+    // this.options.map = map;
+    var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
     $(sliderContainer).append('<div id="leaflet-slider" style="width:200px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:200px; margin-top:10px;background-color:#FFFFFF"></div></div>');
     //Prevent map panning/zooming while using the slider
-    $(sliderContainer).mousedown(function () {
-        map.dragging.disable();
+    $(sliderContainer).mousedown(function() {
+      map.dragging.disable();
     });
-    $(document).mouseup(function () {
-        map.dragging.enable();
-        //Only show the slider timestamp while using the slider
-        $('#slider-timestamp').html('');
+    $(document).mouseup(function() {
+      map.dragging.enable();
+      //Only show the slider timestamp while using the slider
+      $('#slider-timestamp').html('');
     });
-
-    // calculate min and max value for the slider from GetCapabilities
-    this.options.minValue = minDate;
-    this.options.maxValue = maxDate;
 
     return sliderContainer;
   },
 
-  onRemove: function (map) {
+  onRemove: function(map) {
     // when removed
     // add all the markers removed by slider to the stationGroups
+    // console.log('onremove')
     resetMarkers();
     $('#leaflet-slider').remove();
   },
 
+  startSlider: function() {
+    // console.log('startslider')
+    _options = this.options;
+    $("#leaflet-slider").slider({
+      range: _options.range,
+      values: [
+        0,
+        _options.maxValue.diff(_options.minValue, 'days')
+      ],
+      min: _options.min,
+      max: _options.max,
+      step:1,
+      stop: function(e, ui) {
+        var map = _options.map;
+        var low = ui.values[0];
+        var high = ui.values[1];
+        // console.log(low, high);
+        // console.log(low==_options.min && high==_options.max)
+        if(low==_options.min && high==_options.max){
+          // console.log('resetting')
+          resetMarkers();
+        }else {
+          var dateValMin = _options.minValue.add(low,'days');
+          var dateValMax = _options.maxValue.subtract(high,'days');
+          // console.log(dateValMin,dateValMax);
+          for (i = 0; i < stationCount - 1; i++) {
+            if (!(stationArray[i].marker.options.beginTime>dateValMin && stationArray[i].marker.options.endTime<dateValMax)) {
+              stationArray[i].marker.options.enabled = false;
+            } else {
+              if (!stationArray[i].marker.options.enabled) {
+                stationArray[i].marker.options.enabled = true;
+              }
+            }
+            stationGroups.refreshClusters();
+          }
+        }
+      }
+    });
+  }
+
 });
 
-L.control.sample = function(id, options) {
-  return new L.Control.Sample(id, options);
-}
+//  Simple function based on stationArray
 
+// function propertyFiltering(prop) {
+//   if(prop!='RESET') {
+//     for(i=0;i<stationCount-1;i++) {
+//       if(!isInArray(prop,stationArray[i].marker.options.observedProps)) {
+//         stationGroups.removeLayer(stationArray[i].marker);
+//         stationGroups.refreshClusters();
+//       }else {
+//         if(!stationGroups.hasLayer(stationArray[i].marker)) {
+//           stationGroups.addLayer(stationArray[i].marker);
+//           stationGroups.refreshClusters();
+//         }
+//       }
+//     }
+//   }else {
+//     resetMarkers();
+//     stationGroups.refreshClusters();
+//   }
+// };
 
+// Function based on enabled property
 function propertyFiltering(prop) {
-  if(prop!='RESET') {
-    for(i=0;i<stationCount-1;i++) {
-      if(!isInArray(prop,stationArray[i].marker.options.observedProps)) {
-        stationGroups.removeLayer(stationArray[i].marker);
+  if (prop != 'RESET') {
+    for (i = 0; i < stationCount - 1; i++) {
+      if (!isInArray(prop, stationArray[i].marker.options.observedProps)) {
+        stationArray[i].marker.options.enabled = false;
         stationGroups.refreshClusters();
-      }else {
-        if(!stationGroups.hasLayer(stationArray[i].marker)) {
-          stationGroups.addLayer(stationArray[i].marker);
+      } else {
+        if (!stationArray[i].marker.options.enabled) {
+          stationArray[i].marker.options.enabled = true;
           stationGroups.refreshClusters();
         }
       }
     }
-  }else {
-    resetMarkers();
+  } else {
+    for (i = 0; i < stationCount - 1; i++) {
+      if (!stationArray[i].marker.options.enabled) {
+        stationArray[i].marker.options.enabled = true;
+      }
+    }
     stationGroups.refreshClusters();
   }
 };
 
-$('#spatialFilter').change(function() {
-  if ($('#spatialFilter').prop('checked')) {
-    spatialFiltering(true);
-  } else {
-    spatialFiltering(false)
-  }
-});
-
-$('#temporalFilter').change(function() {
-  if ($('#temporalFilter').prop('checked')) {
-    temporalFiltering(true);
-  } else {
-    temporalFiltering(false)
-  }
-});
-
-$('#propertyFilter').change(function() {
-  if ($('#propertyFilter').prop('checked')) {
-    $('#propSelect').prop('disabled', false);
-    $('#propSelect').on('change', function() {
-      propertyFiltering($('#propSelect').val())
-    })
-  } else {
-    $('#propSelect').prop('disabled', true);
-    propertyFiltering('RESET')
-  }
+$('#propSelect').on('change', function() {
+  propertyFiltering($('#propSelect').val())
 });
 
 //Function to display the sensor readings using plotly and temporal subsetting
@@ -333,9 +485,10 @@ $.ajax({
         enabled: true
       });
 
-      // console.log(moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)<moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML))
-      if(minDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)<minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)
-      // if(maxDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)>minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)
+      // console.log(moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML).subtract(1,'day'))
+      if (minDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML) < minDate)
+        minDate = moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)
+        // if(maxDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)>minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)
       const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
       stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
@@ -355,10 +508,13 @@ $.ajax({
         }, 150);
 
       })
-      stationArray.push({marker: stationMarker, id: i-1, detail: stationHTML});
+      stationArray.push({
+        marker: stationMarker,
+        id: i - 1,
+        detail: stationHTML
+      });
       stationGroups.addLayer(stationMarker);
     }
-
     maxDate = moment();
 
     // console.log(minDate, maxDate);
@@ -392,6 +548,25 @@ $.ajax({
 
       chart.draw(data, options);
     })
+
+    L.control.temporalController = function(id, options) {
+      return new L.Control.TemporalControl(id, options);
+    }
+
+    var sliderControl = L.control.temporalController({
+      // topright, topleft, bottomleft, bottomright
+      position: 'topright',
+      minValue: minDate,
+      maxValue: maxDate,
+      layer: OSMLayer,
+      range: true,
+      min: 0,
+      max: maxDate.diff(minDate, 'days')
+    });
+    // console.log('adding slider')
+    map.addControl(sliderControl);
+
+    sliderControl.startSlider();
   },
   error: function(xhr, staus, error) {
     console.log('error in ajax', status, error);
