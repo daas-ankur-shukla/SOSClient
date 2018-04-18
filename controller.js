@@ -360,10 +360,12 @@ function propertyFiltering(prop) {
     for (i = 0; i < stationCount - 1; i++) {
       if (!isInArray(prop, stationArray[i].marker.options.observedProps)) {
         stationArray[i].marker.options.enabled = false;
+        stationGroups.removeLayer(stationArray[i].marker);
         stationGroups.refreshClusters();
       } else {
         if (!stationArray[i].marker.options.enabled) {
           stationArray[i].marker.options.enabled = true;
+          stationGroups.addLayer(stationArray[i].marker);
           stationGroups.refreshClusters();
         }
       }
@@ -372,6 +374,7 @@ function propertyFiltering(prop) {
     for (i = 0; i < stationCount - 1; i++) {
       if (!stationArray[i].marker.options.enabled) {
         stationArray[i].marker.options.enabled = true;
+        stationGroups.addLayer(stationArray[i].marker);
       }
     }
     stationGroups.refreshClusters();
