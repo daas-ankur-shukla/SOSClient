@@ -388,6 +388,7 @@ $('#propSelect').on('change', function() {
 //Function for refreshing charts whenever filters are selected
 //$params: behaviour - takes value of temporal, spatial, property, onLoad(for onLoad of website)
 function refreshCharts(behaviour, observedProp){
+  
   if (behaviour == 'onLoad') {
       selectedVal = $('#chartPropSelect').val();
       console.log(selectedVal)
@@ -529,6 +530,83 @@ function refreshCharts(behaviour, observedProp){
       }
     });
   }
+
+  // Refresh charts after Spatial Filtering
+  if (behaviour == 'initialChange') {
+    var filterSelect = $('#propSelect').val()
+    if(filterSelect == 'Spatial'){
+      console.log("I am in spatial and value of chartProp has changed")
+      refreshCharts('spatial', bb)
+    }
+    selectedVal = $('#chartPropSelect').val();
+        if(selectedVal == 'RESET'){
+            selectedVal = 'sea_floor_depth_below_sea_surface' 
+        }
+        var currentDate = moment(currentDate).subtract(1, 'days').format('YYYY-MM-DD')
+        console.log(currentDate)
+        var startDate = moment(currentDate).subtract(10, 'days').format('YYYY-MM-DD')
+        console.log(startDate)
+        var appendTime = 'T00:00Z'
+        var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty='+selectedVal+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime='+startDate+appendTime+'/'+currentDate+appendTime
+        console.log(analytics_url)
+
+        $.ajax({
+          url: analytics_url,
+          datatype: 'text',
+          success: function(result){
+            //console.log(result)
+            temporalXML = StringToXMLDom(result);
+            //console.log(temporalXML)
+            //Change it for corresponding station by including the station id
+            var observationTag = result.getElementsByTagName('om:Observation')[0]
+            console.log(observationTag)
+            var observationList = observationTag.children[5];
+            console.log(observationList)
+            var sensorValues = observationList.children[0].children[2];
+            sensorValues = sensorValues.innerHTML.split('\n')
+            //console.log(sensorValues[0])
+            //console.log(sensorValues[0].split(',')[2])
+            sensorValuesLength = sensorValues.length
+            //console.log(sensorValuesLength)
+            var xAxes = []; 
+            var yAxes = [];
+            for (i=0; i<sensorValuesLength-1; i++) {
+              
+              xAxes.push(sensorValues[i].split(',')[0]);
+              console.log(xAxes)
+              yAxes.push(sensorValues[i].split(',')[2]);
+              console.log(yAxes)
+            }  
+            var trace1 = {
+             x: xAxes,
+             y: yAxes,
+             type: 'lines'
+            };
+           var data = [trace1];
+           var layout = {
+                title: 'Variation of '+obsPropMap[selectedVal]+' With Time',
+                xaxis: {
+                  title: 'Timestamp',
+                  titlefont: {
+                    family: 'Courier New, monospace',
+                    size: 12,
+                    color: '#000000'
+                  }
+                },
+                yaxis: {
+                  title: obsPropMap[observedProp],
+                  titlefont: {
+                    family: 'Courier New, monospace',
+                    size: 12,
+                    color: '#000000'
+                  }
+                }
+              }
+           Plotly.newPlot('chart', data, layout);
+           console.log("Chart Displayed")
+          }
+        });
+    } 
 }
 
 $('#chartPropSelect').on('change', function() {
