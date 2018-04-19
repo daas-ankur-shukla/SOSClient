@@ -1,8 +1,8 @@
 // Variable definitions
 var map
-const ndbc_sos = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetCapabilities&service=SOS'
-const describeStationURL = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=DescribeSensor&service=SOS&version=1.0.0&outputformat=text/xml;subtype=%22sensorML/1.0.1%22&procedure=urn:ioos:station:wmo:'
-const local_sos = 'https://'
+var ndbc_sos = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetCapabilities&service=SOS'
+var describeStationURL = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=DescribeSensor&service=SOS&version=1.0.0&outputformat=text/xml;subtype=%22sensorML/1.0.1%22&procedure=urn:ioos:station:wmo:'
+var local_sos = 'https://'
 var GetCapabilitiesXML
 var markerJSON
 var stationCount
@@ -36,7 +36,7 @@ var stationGroups = L.markerClusterGroup({
 var minDate = '';
 var maxDate = '';
 
-const obsPropMap = {
+var obsPropMap = {
   'sea_floor_depth_below_sea_surface': 'Sea Floor Depth Below Sea Surface',
   'air_pressure_at_sea_level': 'Air Pressure At Sea Level',
   'sea_water_temperature': 'Sea Water Temperature',
@@ -203,6 +203,7 @@ map.on('draw:created', function(e) {
         stationArray[i].marker.options.enabled = false;
       }else {
         stationArray[i].marker.options.enabled = true;
+        refreshCharts('spatial', bb)
       }
       stationGroups.refreshClusters();
     }
@@ -384,10 +385,160 @@ $('#propSelect').on('change', function() {
   propertyFiltering($('#propSelect').val())
 });
 
+//Function for refreshing charts whenever filters are selected
+//$params: behaviour - takes value of temporal, spatial, property, onLoad(for onLoad of website)
+function refreshCharts(behaviour, observedProp){
+  if (behaviour == 'onLoad') {
+      selectedVal = $('#chartPropSelect').val();
+      console.log(selectedVal)
+      if(selectedVal == 'RESET'){
+        //console.log(obsPropMap[observedProp])
+        selectedVal =  'sea_floor_depth_below_sea_surface'
+      }
+      console.log(selectedVal)
+      var currentDate = moment(currentDate).subtract(1, 'days').format('YYYY-MM-DD')
+      console.log(currentDate)
+      var startDate = moment(currentDate).subtract(10, 'days').format('YYYY-MM-DD')
+      console.log(startDate)
+      var appendTime = 'T00:00Z'
+      
+      var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty='+selectedVal+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime='+startDate+appendTime+'/'+currentDate+appendTime
+      console.log(analytics_url)
+
+      $.ajax({
+        url: analytics_url,
+        datatype: 'text',
+        success: function(result){
+          //console.log(result)
+          temporalXML = StringToXMLDom(result);
+          //console.log(temporalXML)
+          //Change it for corresponding station by including the station id
+          var observationTag = result.getElementsByTagName('om:Observation')[0]
+          //console.log(observationTag)
+          var observationList = observationTag.children[5];
+          //console.log(observationList)
+          var sensorValues = observationList.children[0].children[2];
+          sensorValues = sensorValues.innerHTML.split('\n')
+          //console.log(sensorValues[0])
+          //console.log(sensorValues[0].split(',')[2])
+          sensorValuesLength = sensorValues.length
+          //console.log(sensorValuesLength)
+          var xAxes = []; 
+          var yAxes = [];
+          for (i=0; i<sensorValuesLength-1; i++) {
+            
+            xAxes.push(sensorValues[i].split(',')[0]);
+            console.log(xAxes)
+            yAxes.push(sensorValues[i].split(',')[2]);
+            console.log(yAxes)
+          }  
+          var trace1 = {
+           x: xAxes,
+           y: yAxes,
+           type: 'lines'
+          };
+         var data = [trace1];
+         var layout = {
+            title: 'Variation of '+obsPropMap[observedProp]+' With Time',
+            xaxis: {
+              title: 'Timestamp',
+              titlefont: {
+                family: 'Courier New, monospace',
+                size: 12,
+                color: '#000000'
+              }
+            },
+            yaxis: {
+              title: obsPropMap[observedProp],
+              titlefont: {
+                family: 'Courier New, monospace',
+                size: 12,
+                color: '#000000'
+              }
+            }
+          }
+         Plotly.newPlot('chart', data, layout);
+         console.log("Chart Displayed")
+        }
+      });
+  } 
+  // Refresh charts after Spatial Filtering
+  if (behaviour == 'spatial') {
+    selectedVal = $('#chartPropSelect').val();
+    if(selectedVal == 'RESET'){
+        selectedVal = 'sea_floor_depth_below_sea_surface' 
+    }
+    bbox = observedProp[0][1].lng+','+observedProp[0][3].lat+','+observedProp[0][3].lng+','+observedProp[0][1].lat
+    var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&featureofinterest=BBOX:'+bbox+'&observedproperty='+selectedVal+'&responseformat=text/xml;subtype=%22om/1.0.0%22'
+    console.log(analytics_url)
+
+    $.ajax({
+      url: analytics_url,
+      datatype: 'text',
+      success: function(result){
+        //console.log(result)
+        temporalXML = StringToXMLDom(result);
+        //console.log(temporalXML)
+        //Change it for corresponding station by including the station id
+        var observationTag = result.getElementsByTagName('om:Observation')[0]
+        console.log(observationTag)
+        var observationList = observationTag.children[5];
+        console.log(observationList)
+        var sensorValues = observationList.children[0].children[2];
+        sensorValues = sensorValues.innerHTML.split('\n')
+        //console.log(sensorValues[0])
+        //console.log(sensorValues[0].split(',')[2])
+        sensorValuesLength = sensorValues.length
+        //console.log(sensorValuesLength)
+        var xAxes = []; 
+        var yAxes = [];
+        for (i=0; i<sensorValuesLength-1; i++) {
+          
+          xAxes.push(sensorValues[i].split(',')[0]);
+          console.log(xAxes)
+          yAxes.push(sensorValues[i].split(',')[2]);
+          console.log(yAxes)
+        }  
+        var trace1 = {
+         x: xAxes,
+         y: yAxes,
+         type: 'lines'
+        };
+       var data = [trace1];
+       var layout = {
+            title: 'Variation of '+obsPropMap[selectedVal]+' With Time',
+            xaxis: {
+              title: 'Timestamp',
+              titlefont: {
+                family: 'Courier New, monospace',
+                size: 12,
+                color: '#000000'
+              }
+            },
+            yaxis: {
+              title: obsPropMap[observedProp],
+              titlefont: {
+                family: 'Courier New, monospace',
+                size: 12,
+                color: '#000000'
+              }
+            }
+          }
+       Plotly.newPlot('chart', data, layout);
+       console.log("Chart Displayed")
+      }
+    });
+  }
+}
+
+$('#chartPropSelect').on('change', function() {
+  refreshCharts('initialChange',$('#chartPropSelect').val())
+});
+
 //Function to display the sensor readings using plotly and temporal subsetting
-function displayAnalytics(observedProperty) {
+function displayAnalytics(observedProp) {
   //console.log(stationID)
-  console.log(observedProperty)
+  //console.log(observedProp)
   //var currentDate = moment().format('YYYY-MM-DD')
   var currentDate = moment(currentDate).subtract(1, 'days').format('YYYY-MM-DD')
   console.log(currentDate)
@@ -396,7 +547,7 @@ function displayAnalytics(observedProperty) {
   var appendTime = 'T00:00Z'
   //var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty=air_pressure_at_sea_level&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=2018-04-13T00:00Z/2018-04-15T00:00Z'
   //var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty=air_pressure_at_sea_level&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
-  var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty='+observedProperty+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime='+startDate+appendTime+'/'+currentDate+appendTime
+  var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty='+observedProp+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime='+startDate+appendTime+'/'+currentDate+appendTime
   console.log(analytics_url)
 //   var trace1 = {
 //   x: [1, 2, 3, 4], 
@@ -456,6 +607,8 @@ $.ajax({
   url: ndbc_sos,
   dataType: 'text',
   success: function(result) {
+    // Refreshing charts on initial load
+    refreshCharts('onLoad', 'sea_floor_depth_below_sea_surface')
     // console.log(result);
     GetCapabilitiesXML = StringToXMLDom(result);
 
