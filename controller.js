@@ -324,9 +324,13 @@ L.Control.TemporalControl = L.Control.extend({
           for (i = 0; i < stationCount - 1; i++) {
             if (!(stationArray[i].marker.options.beginTime>dateValMin && stationArray[i].marker.options.endTime<dateValMax)) {
               stationArray[i].marker.options.enabled = false;
+              stationGroups.removeLayer(stationArray[i].marker);
+              stationGroups.refreshClusters();
             } else {
               if (!stationArray[i].marker.options.enabled) {
                 stationArray[i].marker.options.enabled = true;
+                stationGroups.addLayer(stationArray[i].marker);
+                stationGroups.refreshClusters();
               }
             }
             stationGroups.refreshClusters();
