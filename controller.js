@@ -8,9 +8,9 @@ var markerJSON
 var stationCount
 var stationArray = [];
 
-var spatialArray = [];
-var temporalArray = [];
-var propArray = [];
+var spatialGroup = L.markerClusterGroup();
+var temporalGroup = L.markerClusterGroup();
+var propGroup = L.markerClusterGroup();
 
 var stationGroups = L.markerClusterGroup({
   chunkedLoading: true,
@@ -142,17 +142,21 @@ var co;
 function refreshDisplay() {
   for(var i=0;i<stationCount-1;i++) {
     // console.log(isInArray(stationArray[i].marker,spatialArray), isInArray(stationArray[i].marker,temporalArray), isInArray(stationArray[i].marker,propArray));
-    if(isInArray(stationArray[i].marker,spatialArray) && isInArray(stationArray[i].marker,temporalArray) && isInArray(stationArray[i].marker,propArray)) {
+    if(spatialGroup.hasLayer(stationArray[i].marker) && temporalGroup.hasLayer(stationArray[i].marker) && propGroup.hasLayer(stationArray[i].marker)) {
       if(!stationGroups.hasLayer(stationArray[i].marker)) {
         stationGroups.addLayer(stationArray[i].marker);
+        stationGroups.refreshClusters();
       }
     }else {
       if(stationGroups.hasLayer(stationArray[i].marker)) {
         stationGroups.removeLayer(stationArray[i].marker);
+        stationGroups.refreshClusters();
       }
     }
   }
-}
+  stationGroups.refreshClusters();
+};
+
 function resetMarkers() {
   for (i = 0; i < stationCount - 1; i++) {
     stationArray[i].marker.options.enabled = true;
@@ -198,19 +202,18 @@ map.on('draw:created', function(e) {
     bb = layer.getLatLngs();
     var currBb = document.getElementById("bb");
     // console.log(bb);
+    // Code for Spatial Filter
     for (var i = 0; i < stationCount - 1; i++) {
       latlong = [stationArray[i].marker.getLatLng()];
       if (!(latlong[0].lat < bb[0][1].lat && latlong[0].lng > bb[0][1].lng && latlong[0].lat > bb[0][3].lat && latlong[0].lng < bb[0][3].lng)) {
-        stationArray[i].marker.options.enabled = false;
-        stationGroups.removeLayer(stationArray[i].marker);
-        stationGroups.refreshClusters();
+        // stationArray[i].marker.options.enabled = false;
+        spatialGroup.removeLayer(stationArray[i].marker);
       } else {
-        stationArray[i].marker.options.enabled = true;
-        stationGroups.addLayer(stationArray[i].marker);
-        stationGroups.refreshClusters();
+        // stationArray[i].marker.options.enabled = true;
+        spatialGroup.addLayer(stationArray[i].marker);
       }
-      stationGroups.refreshClusters();
     }
+    refreshDisplay();
   }
   drawnItems.addLayer(layer);
 });
@@ -223,7 +226,12 @@ L.Control.RemoveAll = L.Control.extend({
     var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
     L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation).addListener(controlDiv, 'click', L.DomEvent.preventDefault).addListener(controlDiv, 'click', function() {
       drawnItems.clearLayers();
-      resetMarkers();
+    for(var i=0;i<stationCount-1;i++) {
+      if(!spatialGroup.hasLayer(stationArray[i].marker)) {
+        spatialGroup.addLayer(stationArray[i].marker);
+      }
+    }
+    refreshDisplay();
     });
     var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
     controlUI.title = 'Remove All Polygons';
@@ -328,25 +336,25 @@ L.Control.TemporalControl = L.Control.extend({
         // console.log(low==_options.min && high==_options.max)
         if (low == _options.min && high == _options.max) {
           // console.log('resetting')
-          resetMarkers();
+          for(var i=0;i<stationCount-1;i++) {
+            if(!temporalGroup.hasLayer(stationArray[i].marker)) {
+              temporalGroup.addLayer(stationArray[i].marker);
+            }
+          }
+          refreshDisplay();
         } else {
           var dateValMin = _options.minValue.add(low, 'days');
           var dateValMax = _options.maxValue.subtract(high, 'days');
           // console.log(dateValMin,dateValMax);
           for (i = 0; i < stationCount - 1; i++) {
             if (!(stationArray[i].marker.options.beginTime > dateValMin && stationArray[i].marker.options.endTime < dateValMax)) {
-              stationArray[i].marker.options.enabled = false;
-              stationGroups.removeLayer(stationArray[i].marker);
-              stationGroups.refreshClusters();
+              // stationArray[i].marker.options.enabled = false;
+              temporalGroup.removeLayer(stationArray[i].marker);
             } else {
-              if (!stationArray[i].marker.options.enabled) {
-                stationArray[i].marker.options.enabled = true;
-                stationGroups.addLayer(stationArray[i].marker);
-                stationGroups.refreshClusters();
-              }
+              temporalGroup.addLayer(stationArray[i].marker);
             }
-            stationGroups.refreshClusters();
           }
+          refreshDisplay();
         }
       }
     });
@@ -380,26 +388,18 @@ function propertyFiltering(prop) {
   if (prop != 'RESET') {
     for (i = 0; i < stationCount - 1; i++) {
       if (!isInArray(prop, stationArray[i].marker.options.observedProps)) {
-        stationArray[i].marker.options.enabled = false;
-        stationGroups.removeLayer(stationArray[i].marker);
-        stationGroups.refreshClusters();
+        // stationArray[i].marker.options.enabled = false;
+        propGroup.removeLayer(stationArray[i].marker);
       } else {
-        if (!stationArray[i].marker.options.enabled) {
-          stationArray[i].marker.options.enabled = true;
-          stationGroups.addLayer(stationArray[i].marker);
-          stationGroups.refreshClusters();
-        }
+        propGroup.addLayer(stationArray[i].marker);
       }
     }
   } else {
     for (i = 0; i < stationCount - 1; i++) {
-      if (!stationArray[i].marker.options.enabled) {
-        stationArray[i].marker.options.enabled = true;
-        stationGroups.addLayer(stationArray[i].marker);
-      }
+      propGroup.addLayer(stationArray[i].marker);
     }
-    stationGroups.refreshClusters();
   }
+  refreshDisplay();
 };
 
 $('#propSelect').on('change', function() {
@@ -465,14 +465,14 @@ $.ajax({
       stationArray.push({
         marker: stationMarker
       });
-      spatialArray.push(stationMarker);
-      temporalArray.push(stationMarker);
-      propArray.push(stationMarker);
+      spatialGroup.addLayer(stationMarker);
+      temporalGroup.addLayer(stationMarker);
+      propGroup.addLayer(stationMarker);
       // stationGroups.addLayer(stationMarker);
     }
     maxDate = moment();
-    refreshDisplay();
     map.addLayer(stationGroups);
+    refreshDisplay();
 
     L.control.temporalController = function(id, options) {
       return new L.Control.TemporalControl(id, options);
