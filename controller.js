@@ -330,6 +330,14 @@ L.Control.TemporalControl = L.Control.extend({
       min: _options.min,
       max: _options.max,
       step: 1,
+      slide: function(e, ui ) {
+        var low = ui.values[0];
+        var high = ui.values[1];
+        var dateValMin = _options.minValue.add(low, 'days');
+        var dateValMax = _options.maxValue.subtract(high, 'days');
+        // console.log(dateValMin, dateValMax)
+        $('#slider-timestamp').html('From '+dateValMin.format('LLLL')+' To '+dateValMax.format('LLLL'));
+      },
       stop: function(e, ui) {
         var map = _options.map;
         var low = ui.values[0];
