@@ -141,31 +141,28 @@ var co;
 
 function refreshDisplay() {
   for(var i=0;i<stationCount-1;i++) {
-    // console.log(isInArray(stationArray[i].marker,spatialArray), isInArray(stationArray[i].marker,temporalArray), isInArray(stationArray[i].marker,propArray));
     if(spatialGroup.hasLayer(stationArray[i].marker) && temporalGroup.hasLayer(stationArray[i].marker) && propGroup.hasLayer(stationArray[i].marker)) {
       if(!stationGroups.hasLayer(stationArray[i].marker)) {
         stationGroups.addLayer(stationArray[i].marker);
-        stationGroups.refreshClusters();
       }
     }else {
       if(stationGroups.hasLayer(stationArray[i].marker)) {
         stationGroups.removeLayer(stationArray[i].marker);
-        stationGroups.refreshClusters();
       }
     }
   }
   stationGroups.refreshClusters();
 };
 
-function resetMarkers() {
-  for (i = 0; i < stationCount - 1; i++) {
-    stationArray[i].marker.options.enabled = true;
-    if (!stationGroups.hasLayer(stationArray[i].marker)) {
-      stationGroups.addLayer(stationArray[i].marker);
-    }
-  }
-  stationGroups.refreshClusters();
-}
+// function resetMarkers() {
+//   for (i = 0; i < stationCount - 1; i++) {
+//     stationArray[i].marker.options.enabled = true;
+//     if (!stationGroups.hasLayer(stationArray[i].marker)) {
+//       stationGroups.addLayer(stationArray[i].marker);
+//     }
+//   }
+//   stationGroups.refreshClusters();
+// }
 
 var bb;
 var drawnItems = new L.FeatureGroup();
@@ -312,7 +309,12 @@ L.Control.TemporalControl = L.Control.extend({
   },
 
   onRemove: function(map) {
-    resetMarkers();
+    for(var i=0;i<stationCount-1;i++) {
+      if(!temporalGroup.hasLayer(stationArray[i].marker)) {
+        temporalGroup.addLayer(stationArray[i].marker);
+      }
+    }
+    refreshDisplay();
     $('#leaflet-slider').remove();
   },
 
