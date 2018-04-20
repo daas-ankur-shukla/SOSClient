@@ -262,8 +262,8 @@ L.Control.TemporalControl = L.Control.extend({
   options: {
     // topright, topleft, bottomleft, bottomright
     position: 'topright',
-    minValue: "",
-    maxValue: "",
+    minDate: "",
+    maxDate: "",
     layer: null,
     range: false,
     min: 0,
@@ -325,7 +325,7 @@ L.Control.TemporalControl = L.Control.extend({
       range: _options.range,
       values: [
         0,
-        _options.maxValue.diff(_options.minValue, 'days')
+        _options.maxDate.diff(_options.minDate, 'days')
       ],
       min: _options.min,
       max: _options.max,
@@ -333,10 +333,22 @@ L.Control.TemporalControl = L.Control.extend({
       slide: function(e, ui ) {
         var low = ui.values[0];
         var high = ui.values[1];
-        var dateValMin = _options.minValue.add(low, 'days');
-        var dateValMax = _options.maxValue.subtract(high, 'days');
-        // console.log(dateValMin, dateValMax)
-        $('#slider-timestamp').html('From '+dateValMin.format('LLLL')+' To '+dateValMax.format('LLLL'));
+        var dateValMin = moment(_options.minDate);
+        var dateValMax = moment(_options.maxDate);
+        var tempMin;
+        var tempMax;
+        // console.log(ui.handleIndex)
+        if(ui.handleIndex) {
+          // console.log('2nd moving')
+          tempMin = moment(dateValMin);
+          tempMax = moment(dateValMax.subtract(_options.max - high, 'days'));
+        }else if((!ui.handleIndex)) {
+          tempMin = moment(dateValMin.add(low, 'days'));
+          tempMax = moment(dateValMax);
+        }
+        // console.log(tempMin.format('LLLL'), tempMax.format('LLLL'));
+        // console.log(low, _options.max - high)
+        $('#slider-timestamp').html('From '+tempMin.format('LLLL')+' To '+tempMax.format('LLLL'));
       },
       stop: function(e, ui) {
         var map = _options.map;
@@ -353,11 +365,22 @@ L.Control.TemporalControl = L.Control.extend({
           }
           refreshDisplay();
         } else {
-          var dateValMin = _options.minValue.add(low, 'days');
-          var dateValMax = _options.maxValue.subtract(high, 'days');
-          // console.log(dateValMin,dateValMax);
+          var dateValMin = moment(_options.minDate);
+          var dateValMax = moment(_options.maxDate);
+          var tempMin;
+          var tempMax;
+          if(low == _options.min) {
+            // console.log('2nd moving')
+            tempMin = moment(dateValMin);
+            tempMax = moment(dateValMax.subtract(_options.max - high, 'days'));
+          }else if(high == _options.max) {
+            tempMin = moment(dateValMin.add(low, 'days'));
+            tempMax = moment(dateValMax);
+          }
+          // console.log(dateValMin.format('LLLL'));
+          // console.log(dateValMax.format('LLLL'));
           for (i = 0; i < stationCount - 1; i++) {
-            if (!(stationArray[i].marker.options.beginTime > dateValMin && stationArray[i].marker.options.endTime < dateValMax)) {
+            if (!(stationArray[i].marker.options.beginTime > tempMin && stationArray[i].marker.options.endTime < tempMax)) {
               // stationArray[i].marker.options.enabled = false;
               temporalGroup.removeLayer(stationArray[i].marker);
             } else {
@@ -481,18 +504,21 @@ $.ajax({
       // stationGroups.addLayer(stationMarker);
     }
     maxDate = moment();
+    // console.log(maxDate);
+    // console.log(maxDate);
+    // console.log(minDate.format('LLLL'), maxDate.format('LLLL'))
     map.addLayer(stationGroups);
     refreshDisplay();
 
     L.control.temporalController = function(id, options) {
       return new L.Control.TemporalControl(id, options);
     }
-
+    // console.log(maxDate.diff(minDate, 'days'), minDate.add(maxDate.diff(minDate, 'days'), 'days').format('LLLL'), maxDate.subtract(maxDate.diff(minDate, 'days'), 'days').format('LLLL'));
     var sliderControl = L.control.temporalController({
       // topright, topleft, bottomleft, bottomright
       position: 'topright',
-      minValue: minDate,
-      maxValue: maxDate,
+      minDate: moment(minDate),
+      maxDate: moment(maxDate),
       layer: OSMLayer,
       range: true,
       min: 0,
