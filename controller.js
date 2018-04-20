@@ -403,42 +403,82 @@ function refreshCharts(behaviour, observedProp){
       console.log(startDate)
       var appendTime = 'T00:00Z'
       
-      var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty='+selectedVal+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime='+startDate+appendTime+'/'+currentDate+appendTime
+      var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty='+selectedVal+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
       console.log(analytics_url)
-
+      
+      $('.table_data').html("");
       $.ajax({
         url: analytics_url,
         datatype: 'text',
+        beforeSend: function() {
+                $('#chartPropSelect').css('background', 'url(https://digitalsynopsis.com/wp-content/uploads/2016/06/loading-animations-preloader-gifs-ui-ux-effects-28.gif) no-repeat center');
+                $(".node_data_table").addClass('load');
+        },
         success: function(result){
           //console.log(result)
           temporalXML = StringToXMLDom(result);
           //console.log(temporalXML)
           //Change it for corresponding station by including the station id
-          var observationTag = result.getElementsByTagName('om:Observation')[0]
-          //console.log(observationTag)
-          var observationList = observationTag.children[5];
-          //console.log(observationList)
-          var sensorValues = observationList.children[0].children[2];
-          sensorValues = sensorValues.innerHTML.split('\n')
-          //console.log(sensorValues[0])
+          //var observationTag = result.getElementsByTagName('om:Observation')[2]
+          var observationTag = result.getElementsByTagName('swe2:values')
+          console.log("Obversation Tag", observationTag)
+          // var observationList = observationTag.children[5];
+          // console.log(observationList)
+          // var sensorValues = observationList.children[0].children[2];
+          //console.log(sensorValues)
           //console.log(sensorValues[0].split(',')[2])
-          sensorValuesLength = sensorValues.length
+          numSensors = observationTag.length
           //console.log(sensorValuesLength)
-          var xAxes = []; 
-          var yAxes = [];
-          for (i=0; i<sensorValuesLength-1; i++) {
+          var dateTime = []; 
+          var sensorReading = [];
+          var stnId
+          var sensorId
+          var Id
+
+          var traces = [];
+          for (i=0; i<numSensors-1; i+=2) {
+            sensorValues = observationTag[i].firstChild.data
+            sensorValues = sensorValues.split('\n')
+            console.log(sensorValues)
+            sensorValuesLength = sensorValues.length
+            console.log(sensorValuesLength)
+            for (j=0;j<sensorValuesLength-1;j+=100){
+              console.log(sensorValues[j].split(',')[0], sensorValues[j].split(',')[2])
+              dateTime.push(sensorValues[j].split(',')[0])
+              console.log(dateTime[j])
+              sensorReading.push(sensorValues[j].split(',')[2])
+              console.log(sensorReading[j])
+              Id = sensorValues[j].split(',')[1]
+              console.log("Id", Id)
+              stnId = Id.split(':')[4]
+              console.log("Stn Id", stnId)
+              sensorId = Id.split(':')[6]
+              console.log(sensorId)
+
+              //if()
+              $('.table_data').append('<tr><td>'+stnId+'</td><td>'+sensorId+'</td><td>'+sensorValues[j].split(',')[0]+'</td><td>'+sensorValues[j].split(',')[2]+'</td></tr>');
+            }
+            traces.push({
+              x: dateTime,
+              y: sensorReading,
+              type: 'scatter',
+              mode: 'lines',
+            });
+            //$('.table_data').append('<tr><td>'+stnId+'</td><td>'+sensorId+'</td><td>'+dateTime+'</td><td>'+sensorReading+'</td></tr>');
+          }
+          $(".node_data_table").removeClass('load');
             
-            xAxes.push(sensorValues[i].split(',')[0]);
-            console.log(xAxes)
-            yAxes.push(sensorValues[i].split(',')[2]);
-            console.log(yAxes)
-          }  
-          var trace1 = {
-           x: xAxes,
-           y: yAxes,
-           type: 'lines'
-          };
-         var data = [trace1];
+          //   xAxes.push(sensorValues[i].split(',')[0]);
+          //   console.log(xAxes)
+          //   yAxes.push(sensorValues[i].split(',')[2]);
+          //   console.log(yAxes)
+          // }  
+          // var trace1 = {
+          //  x: xAxes,
+          //  y: yAxes,
+          //  type: 'lines'
+          // };
+         //var data = [trace1];
          var layout = {
             title: 'Variation of '+obsPropMap[observedProp]+' With Time',
             xaxis: {
@@ -458,7 +498,10 @@ function refreshCharts(behaviour, observedProp){
               }
             }
           }
-         Plotly.newPlot('chart', data, layout);
+         Plotly.newPlot('chart', {
+          data:traces,
+           layout: layout,
+          });
          console.log("Chart Displayed")
         }
       });
