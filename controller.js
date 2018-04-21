@@ -11,6 +11,26 @@ var stationArray = [];
 var spatialGroup = L.markerClusterGroup();
 var temporalGroup = L.markerClusterGroup();
 var propGroup = L.markerClusterGroup();
+var gaugeTarget = $('#gauges'); // your canvas element
+var gaugeOptions = {
+  angle: 0.15, // The span of the gauge arc
+  lineWidth: 0.44, // The line thickness
+  radiusScale: 1, // Relative radius
+  pointer: {
+    length: 0.6, // // Relative to gauge radius
+    strokeWidth: 0.035, // The thickness
+    color: '#000000' // Fill color
+  },
+  limitMax: false,     // If false, max value increases automatically if value > maxValue
+  limitMin: false,     // If true, the min value of the gauge will be fixed
+  colorStart: '#6FADCF',   // Colors
+  colorStop: '#8FC0DA',    // just experiment with them
+  strokeColor: '#E0E0E0',  // to see which ones work best for you
+  generateGradient: true,
+  highDpiSupport: true,     // High resolution support
+};
+
+
 
 var stationGroups = L.markerClusterGroup({
   chunkedLoading: true,
@@ -77,6 +97,11 @@ var OSMLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 
 map.addLayer(OSMLayer);
 
+map.on('popupclose',function(e){
+        // console.log('popup closed');
+        gaugeTarget.html('');
+    });
+
 function getObservationURL(id, property) {
   // console.log(property)
   return 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:' + id + '&observedproperty=' + property + '&responseformat=text/xml;subtype=\"om/1.0.0\"&eventtime=latest';
@@ -127,6 +152,16 @@ function describeStation(stationXML, stationID, propList) {
   // console.log(props)
   var stationInfo = stationXML.children[0].children[0].children[0].children;
   // console.log(stationInfo)
+  for(var i=0;i<propList.length;i++) {
+    console.log('adding canvas', gaugeTarget)
+    gaugeTarget.append('<canvas id='+i+'></canvas>');
+    var targetCanvas = document.getElementById(i);
+    console.log(gaugeTarget, targetCanvas);
+    var gauge = new Gauge(targetCanvas).setOptions(gaugeOptions); // create sexy gauge!
+    gauge.maxValue = 3000; // set max gauge value
+    gauge.setMinValue(0);  // set min value
+    gauge.set(1250); // set actual value
+  }
   if (stationInfo.length > 0) {
     var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr>' + props.join('\n') + '</table>';
     // var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + '\nTo know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>,\n<p>To get my observations click on the respective links</a>' + '\n<ol>' + props.join('\n')+'</ol>';
@@ -483,6 +518,7 @@ $.ajax({
         var id = this.options.stationID;
         var observedProps = this.options.observedProps
         var popup = e.target.getPopup();
+        var stationData;
         setTimeout(function() {
           // console.log(e.target, e.target.options.stationID)
           $.get(describeStationURL + id).done(function(data) {
@@ -493,7 +529,6 @@ $.ajax({
           });
           //your code to be executed after 0.15 second
         }, 150);
-
       })
       stationArray.push({
         marker: stationMarker
