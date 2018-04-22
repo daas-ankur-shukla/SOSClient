@@ -11,6 +11,24 @@ var stationArray = [];
 var spatialGroup = L.markerClusterGroup();
 var temporalGroup = L.markerClusterGroup();
 var propGroup = L.markerClusterGroup();
+var gaugeTarget = $('#gauges'); // your canvas element
+var gaugeOptions = {
+  angle: 0.15, // The span of the gauge arc
+  lineWidth: 0.44, // The line thickness
+  radiusScale: 1, // Relative radius
+  pointer: {
+    length: 0.6, // // Relative to gauge radius
+    strokeWidth: 0.035, // The thickness
+    color: '#000000' // Fill color
+  },
+  limitMax: false, // If false, max value increases automatically if value > maxValue
+  limitMin: false, // If true, the min value of the gauge will be fixed
+  colorStart: '#6FADCF', // Colors
+  colorStop: '#8FC0DA', // just experiment with them
+  strokeColor: '#E0E0E0', // to see which ones work best for you
+  generateGradient: true,
+  highDpiSupport: true, // High resolution support
+};
 
 var stationGroups = L.markerClusterGroup({
   chunkedLoading: true,
@@ -77,6 +95,11 @@ var OSMLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 
 map.addLayer(OSMLayer);
 
+map.on('popupclose', function(e) {
+  // console.log('popup closed');
+  gaugeTarget.html('');
+});
+
 function getObservationURL(id, property) {
   // console.log(property)
   return 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:' + id + '&observedproperty=' + property + '&responseformat=text/xml;subtype=\"om/1.0.0\"&eventtime=latest';
@@ -95,10 +118,10 @@ function StringToXMLDom(string) {
   return xmlDoc;
 }
 
-function getPropertyData(getObservationXML) {
-  observedProperty = StringToXMLDom(getObservationXML);
-  // console.log(getObservationXML)
-}
+// function getPropertyData(getObservationXML) {
+//   observedProperty = StringToXMLDom(getObservationXML);
+//   // console.log(getObservationXML)
+// }
 
 function getProperties(observedProps) {
   var props = [];
@@ -111,42 +134,67 @@ function getProperties(observedProps) {
   return props;
 }
 
-function describeStation(stationXML, stationID, propList) {
-  var props = [];
-  // console.log(propList, propList.length)
-  for (var i = 0; i < propList.length; i++) {
-    // propName = observedProps[i].outerHTML.split('/').slice(-2, -1)[0].split('"')[0]
-    // console.log(propList[i])
-    observationURL = getObservationURL(stationID, propList[i])
-    $.get(observationURL).done(function(data) {
-      observedPropertyData = getPropertyData(data);
+// function describeStation(stationXML, stationID, propList) {
+//   var props = [];
+//   // console.log(propList, propList.length)
+//   for (var i = 0; i < propList.length; i++) {
+//     // propName = observedProps[i].outerHTML.split('/').slice(-2, -1)[0].split('"')[0]
+//     // console.log(propList[i])
+//     observationURL = getObservationURL(stationID, propList[i])
+//     console.log(propList[i]);
+//     $.get(observationURL).done(function(data) {
+//       console.log(data);
+//
+//       propVal = data.getElementsByTagName('swe2:DataStream')[0].children[2];
+//       if(stationID = 41047)  console.log(propVal);
+//     });
+//     props.push('<tr><td width=\'15%\'><img src=\'./images/' + propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/></td><td width=\'85%\'><a href=\'' + observationURL + '\' target=\'_blank\'>   ' + obsPropMap[propList[i]] + '</a></td></tr>');
+//   }
+//   // console.log(props)
+//   var stationInfo = stationXML.children[0].children[0].children[0].children;
+//   // console.log(stationInfo)
+//   for(var i=0;i<propList.length;i++) {
+//     console.log('adding canvas', gaugeTarget)
+//     gaugeTarget.append('<canvas id='+i+'></canvas>');
+//     var targetCanvas = document.getElementById(i);
+//     var gauge = new Gauge(targetCanvas).setOptions(gaugeOptions); // create sexy gauge!
+//     gauge.maxValue = 3000; // set max gauge value
+//     gauge.setMinValue(0);  // set min value
+//     gauge.set(1250); // set actual value
+//   }
+//   if (stationInfo.length > 0) {
+//     var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr>' + props.join('\n') + '</table>';
+//     // var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + '\nTo know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>,\n<p>To get my observations click on the respective links</a>' + '\n<ol>' + props.join('\n')+'</ol>';
+//     // var des = '<iframe src=\"http://www.ndbc.noaa.gov/widgets/station_page.php?station='+stationID+'\" style=\"border: solid thin #3366ff; width:300px; height:300px\"></iframe>'
+//     return des;
+//   } else {
+//     return '<p>Sorry, I am lost :('
+//   }
+// }
 
-    });
-    props.push('<tr><td width=\'15%\'><img src=\'./images/' + propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/></td><td width=\'85%\'><a href=\'' + observationURL + '\' target=\'_blank\'>   ' + obsPropMap[propList[i]] + '</a></td></tr>');
+function describeStation(stationXML, stationID, propList, popup) {
+  var popupContent = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'/></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr></table>\n<ul>\n'
+  temp = ''
+  for (var i = 0; i < propList.length; i++) {
+      // console.log(i, propList.length);
+      observationURL = getObservationURL(stationID, propList[i]);
+      console.log(observationURL);
+      temp = temp + '<li>\n<div data-url=\"' + observationURL +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/>  ' + obsPropMap[propList[i]] + '</div>\n</li>\n<li>\n<div>'
   }
-  // console.log(props)
-  var stationInfo = stationXML.children[0].children[0].children[0].children;
-  // console.log(stationInfo)
-  if (stationInfo.length > 0) {
-    var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr>' + props.join('\n') + '</table>';
-    // var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + '\nTo know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>,\n<p>To get my observations click on the respective links</a>' + '\n<ol>' + props.join('\n')+'</ol>';
-    // var des = '<iframe src=\"http://www.ndbc.noaa.gov/widgets/station_page.php?station='+stationID+'\" style=\"border: solid thin #3366ff; width:300px; height:300px\"></iframe>'
-    return des;
-  } else {
-    return '<p>Sorry, I am lost :('
-  }
+  popupContent = popupContent+temp;
+  console.log(popupContent);
+  popup.setContent(popupContent);
+  popup.update();
 }
 
-var co;
-
 function refreshDisplay() {
-  for(var i=0;i<stationCount-1;i++) {
-    if(spatialGroup.hasLayer(stationArray[i].marker) && temporalGroup.hasLayer(stationArray[i].marker) && propGroup.hasLayer(stationArray[i].marker)) {
-      if(!stationGroups.hasLayer(stationArray[i].marker)) {
+  for (var i = 0; i < stationCount - 1; i++) {
+    if (spatialGroup.hasLayer(stationArray[i].marker) && temporalGroup.hasLayer(stationArray[i].marker) && propGroup.hasLayer(stationArray[i].marker)) {
+      if (!stationGroups.hasLayer(stationArray[i].marker)) {
         stationGroups.addLayer(stationArray[i].marker);
       }
-    }else {
-      if(stationGroups.hasLayer(stationArray[i].marker)) {
+    } else {
+      if (stationGroups.hasLayer(stationArray[i].marker)) {
         stationGroups.removeLayer(stationArray[i].marker);
       }
     }
@@ -223,12 +271,12 @@ L.Control.RemoveAll = L.Control.extend({
     var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
     L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation).addListener(controlDiv, 'click', L.DomEvent.preventDefault).addListener(controlDiv, 'click', function() {
       drawnItems.clearLayers();
-    for(var i=0;i<stationCount-1;i++) {
-      if(!spatialGroup.hasLayer(stationArray[i].marker)) {
-        spatialGroup.addLayer(stationArray[i].marker);
+      for (var i = 0; i < stationCount - 1; i++) {
+        if (!spatialGroup.hasLayer(stationArray[i].marker)) {
+          spatialGroup.addLayer(stationArray[i].marker);
+        }
       }
-    }
-    refreshDisplay();
+      refreshDisplay();
     });
     var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
     controlUI.title = 'Remove All Polygons';
@@ -309,8 +357,8 @@ L.Control.TemporalControl = L.Control.extend({
   },
 
   onRemove: function(map) {
-    for(var i=0;i<stationCount-1;i++) {
-      if(!temporalGroup.hasLayer(stationArray[i].marker)) {
+    for (var i = 0; i < stationCount - 1; i++) {
+      if (!temporalGroup.hasLayer(stationArray[i].marker)) {
         temporalGroup.addLayer(stationArray[i].marker);
       }
     }
@@ -330,7 +378,7 @@ L.Control.TemporalControl = L.Control.extend({
       min: _options.min,
       max: _options.max,
       step: 1,
-      slide: function(e, ui ) {
+      slide: function(e, ui) {
         var low = ui.values[0];
         var high = ui.values[1];
         var dateValMin = moment(_options.minDate);
@@ -338,17 +386,17 @@ L.Control.TemporalControl = L.Control.extend({
         var tempMin;
         var tempMax;
         // console.log(ui.handleIndex)
-        if(ui.handleIndex) {
+        if (ui.handleIndex) {
           // console.log('2nd moving')
           tempMin = moment(dateValMin);
           tempMax = moment(dateValMax.subtract(_options.max - high, 'days'));
-        }else if((!ui.handleIndex)) {
+        } else if ((!ui.handleIndex)) {
           tempMin = moment(dateValMin.add(low, 'days'));
           tempMax = moment(dateValMax);
         }
         // console.log(tempMin.format('LLLL'), tempMax.format('LLLL'));
         // console.log(low, _options.max - high)
-        $('#slider-timestamp').html('From '+tempMin.format('LLLL')+' To '+tempMax.format('LLLL'));
+        $('#slider-timestamp').html('From ' + tempMin.format('LLLL') + ' To ' + tempMax.format('LLLL'));
       },
       stop: function(e, ui) {
         var map = _options.map;
@@ -358,8 +406,8 @@ L.Control.TemporalControl = L.Control.extend({
         // console.log(low==_options.min && high==_options.max)
         if (low == _options.min && high == _options.max) {
           // console.log('resetting')
-          for(var i=0;i<stationCount-1;i++) {
-            if(!temporalGroup.hasLayer(stationArray[i].marker)) {
+          for (var i = 0; i < stationCount - 1; i++) {
+            if (!temporalGroup.hasLayer(stationArray[i].marker)) {
               temporalGroup.addLayer(stationArray[i].marker);
             }
           }
@@ -369,11 +417,11 @@ L.Control.TemporalControl = L.Control.extend({
           var dateValMax = moment(_options.maxDate);
           var tempMin;
           var tempMax;
-          if(low == _options.min) {
+          if (low == _options.min) {
             // console.log('2nd moving')
             tempMin = moment(dateValMin);
             tempMax = moment(dateValMax.subtract(_options.max - high, 'days'));
-          }else if(high == _options.max) {
+          } else if (high == _options.max) {
             tempMin = moment(dateValMin.add(low, 'days'));
             tempMax = moment(dateValMax);
           }
@@ -483,21 +531,19 @@ $.ajax({
         var id = this.options.stationID;
         var observedProps = this.options.observedProps
         var popup = e.target.getPopup();
+        var stationData;
         setTimeout(function() {
           // console.log(e.target, e.target.options.stationID)
           $.get(describeStationURL + id).done(function(data) {
             // console.log(data)
-            stationData = describeStation(data, id, observedProps);
-            popup.setContent(stationData);
-            popup.update();
+            describeStation(data, id, observedProps, popup);
+            // popup.setContent(stationData);
+            // popup.update();
           });
           //your code to be executed after 0.15 second
         }, 150);
-
       })
-      stationArray.push({
-        marker: stationMarker
-      });
+      stationArray.push({marker: stationMarker});
       spatialGroup.addLayer(stationMarker);
       temporalGroup.addLayer(stationMarker);
       propGroup.addLayer(stationMarker);
