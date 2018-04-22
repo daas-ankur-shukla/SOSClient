@@ -29,30 +29,50 @@
   <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
   <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
   <link rel="stylesheet" type="text/css" href="css/leaflet.draw.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30=" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.2/leaflet.draw.css"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.2/leaflet.draw.css">
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.2/leaflet.draw.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/moment@2.22.1/moment.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gauge.js/1.3.6/gauge.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.3.0/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.3.0/dist/MarkerCluster.Default.css" />
   <script src="https://unpkg.com/leaflet.markercluster@1.3.0/dist/leaflet.markercluster.js"></script>
-  <div class="pull-left" id="map"></div>
-  <div id="filterControl">
-    <select id="propSelect" >
-      <option value="RESET" selected>All Properties</option>
-      <option value="sea_floor_depth_below_sea_surface">Sea Floor Depth Below Sea Surface</option>
-      <option value="air_pressure_at_sea_level">Air Pressure At Sea Level</option>
-      <option value="sea_water_temperature">Sea Water Temperature</option>
-      <option value="sea_water_salinity">Sea Water Salinity</option>
-      <option value="air_temperature">Air Temperature</option>
-      <option value="waves">Waves</option>
-      <option value="winds">Winds</option>
-    </select>
+  <div class="row">
+    <div class="col s1">
+      <h1 class="center-align">SOS Client for NDBC</h1></div>
   </div>
-  <div id="gauges">
-    <canvas id='he'></canvas>
+  <div class="row">
+    <div id="map" class="col s6"></div>
+    <div id="gauges" class="col s2">
+      <canvas id='he'></canvas>
+    </div>
+  </div>
+  <!-- <div class="row">
+      <ul id="filterControl" class="dropdown-content">
+        <li><a href="#!">one<span class="badge">1</span></a></li>
+        <li><a href="#!">two<span class="new badge">1</span></a></li>
+        <li><a href="#!">three</a></li>
+      </ul>
+      <a class="btn dropdown-trigger" href="#!" data-target="dropdown2">Dropdown<i class="material-icons right">arrow_drop_down</i></a>
+    </div> -->
+  <div class="row">
+    <div id="filterControl" class="dropdown-content">
+      <select id="propSelect">
+        <option value="RESET" selected>All Properties</option>
+        <option value="sea_floor_depth_below_sea_surface">Sea Floor Depth Below Sea Surface</option>
+        <option value="air_pressure_at_sea_level">Air Pressure At Sea Level</option>
+        <option value="sea_water_temperature">Sea Water Temperature</option>
+        <option value="sea_water_salinity">Sea Water Salinity</option>
+        <option value="air_temperature">Air Temperature</option>
+        <option value="waves">Waves</option>
+        <option value="winds">Winds</option>
+      </select>
+    </div>
   </div>
   <script src="controller.js"></script>
 </body>
