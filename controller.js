@@ -67,7 +67,25 @@ const obsPropMap = {
   'air_temperature': 'Air Temperature',
   'currents': 'Currents',
   'waves': 'Waves',
-  'winds': 'Winds'
+  'winds': 'Winds',
+  'sea_surface_wave_significant_height': 'Sea Surface Wave Significant Height',
+  'sea_surface_wave_peak_period': 'Sea Surface Wave Peak Period',
+  'sea_surface_wave_mean_period': 'Sea Surface Wave Mean Period',
+  'sea_surface_swell_wave_significant_height': 'Sea Surface Swell Wave Significant Height',
+  'sea_surface_swell_wave_period': 'Sea Surface Swell Wave Period',
+  'sea_surface_wind_wave_significant_height': 'Sea Surface Wind Wave Significant Height',
+  'sea_surface_wind_wave_period': 'Sea Surface Wind Wave Period',
+  'sea_water_temperature': 'Sea Water Temperature',
+  'sea_surface_wave_to_direction': 'Sea Surface Wave To Direction',
+  'sea_surface_swell_wave_to_direction': 'Sea Surface Swell Wave To Direction',
+  'sea_surface_wind_wave_to_direction': 'Sea Surface Wind Wave To Direction',
+  'center_frequency': 'Center Frequency',
+  'bandwidth': 'Bandwidth',
+  'spectral_energy': 'Spectral Energy',
+  'mean_wave_direction': 'Mean Wave Direction',
+  'principal_wave_direction': 'Principal Wave Direcion',
+  'polar_coordinate_r1': 'Polar Coordinate R1',
+  'polar_coordinate_r2': 'Polar Coordinate R2'
 }
 
 function isInArray(value, array) {
@@ -102,7 +120,8 @@ map.on('popupclose', function(e) {
 
 function getObservationURL(id, property) {
   // console.log(property)
-  return 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:' + id + '&observedproperty=' + property + '&responseformat=text/xml;subtype=\"om/1.0.0\"&eventtime=latest';
+  var temp = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:' + id + '&observedproperty=' + property;
+  return temp.toString();
 }
 
 function StringToXMLDom(string) {
@@ -180,13 +199,41 @@ function describeStation(stationXML, stationID, propList, popup) {
   for (var i = 0; i < propList.length; i++) {
       // console.log(i, propList.length);
       observationURL = getObservationURL(stationID, propList[i]);
-      console.log(observationURL);
-      temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/>  ' + obsPropMap[propList[i]] + '</div>\n</li>\n<li>\n<div>'
+      // console.log(observationURL);
+      temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL.toString() +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/>  ' + obsPropMap[propList[i]] + '</div>\n<div class="collapsible-body"></div></li>\n<li>\n<div>'
   }
   popupContent = popupContent+temp+'</div>';
-  console.log(popupContent);
+  // console.log(popupContent);
   popup.setContent(popupContent);
   popup.update();
+  $('.collapsible').collapsible({
+    accordion: true,
+    onOpenStart: function(el){
+        //$('li.roles_icon', this).html('remove');
+        var obsURL = el.children[0].attributes[1].nodeValue + '&responseformat=text/xml;subtype="om/1.0.0"&eventtime=latest'.toString();
+        // var span = el.children[1].
+        console.log(obsURL);
+            $.get(obsURL).done(function(data) {
+              console.log(data);
+              subProps = data.getElementsByTagName('swe:CompositePhenomenon')[0].children;
+              subPropVals = data.getElementsByTagName('swe2:DataStream')[0].children[2].innerHTML.split(',');
+              console.log(subProps, subPropVals);
+              temp = '';
+              for(var j=1;j<subProps.length;j++) {
+                console.log(subProps[j].attributes[0].nodeValue.split('/').pop());
+                temp = temp + '<p>' + obsPropMap[subProps[j].attributes[0].nodeValue.split('/').pop()] + ': ' + subPropVals[j] + '</p>';
+              }
+              console.log(temp)
+              $('.collapsible-body').html('<span>'+temp+'</span>');
+            });
+    },
+    onCloseStart:function(el){
+        //switch back icon to normal
+        // console.log(el);
+        $('.collapsible-body').html('');
+    }
+
+});
 }
 
 function refreshDisplay() {
