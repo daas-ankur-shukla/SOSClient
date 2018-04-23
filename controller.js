@@ -173,15 +173,17 @@ function getProperties(observedProps) {
 // }
 
 function describeStation(stationXML, stationID, propList, popup) {
-  var popupContent = '<table style=\'width:100%\' border=\'0\'><tr><td><a style=\'font-size=50%;margin-top:0.5em;\'>NDBC</a></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'/></td></tr><tr><td colspan=\'2\'><a>Station-' + stationID + '</a></td></tr></table>\n<ul class=\"collapsible\">\n'
+  // var popupContent = '<table style=\'width:100%\' border=\'0\'><tr><td><a style=\'font-size=50%;margin-top:0.5em;\'>NDBC Station '+stationID+'</a></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' class=\"right-align\"/></td></tr></table>\n<ul class=\"collapsible\">\n'
+  var popupContent = '<img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' class=\"left-align\"/><h5 style=\"display:inline\" class="left-align">   NDBC Station '+stationID+'</h5>\n<ul class=\"collapsible\">\n'
+  // var popupContent = '<div class="col s12 m8 offset-m2 l6 offset-l3"><div class="card-panel grey lighten-5 z-depth-1"><div class="row valign-wrapper"><div class="col s2"><img src="images/ndbc_logo.png" alt="" class="circle responsive-img"></div><div class="col s10"><span class="black-text">NDBC Station '+stationID+'</span></div></div></div></div><div><ul class=\"collapsible\">\n'
   temp = ''
   for (var i = 0; i < propList.length; i++) {
       // console.log(i, propList.length);
       observationURL = getObservationURL(stationID, propList[i]);
       console.log(observationURL);
-      temp = temp + '<li>\n<div class=\"collapsible-header\" data-url=\"' + observationURL +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/>  ' + obsPropMap[propList[i]] + '</div>\n</li>\n<li>\n<div>'
+      temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/>  ' + obsPropMap[propList[i]] + '</div>\n</li>\n<li>\n<div>'
   }
-  popupContent = popupContent+temp;
+  popupContent = popupContent+temp+'</div>';
   console.log(popupContent);
   popup.setContent(popupContent);
   popup.update();
@@ -482,7 +484,9 @@ function propertyFiltering(prop) {
   }
   refreshDisplay();
 };
+$('select').formSelect();
 $('#propSelect').on('change', function() {
+  // console.log($('#propSelect').val());
   propertyFiltering($('#propSelect').val())
 });
 
@@ -523,7 +527,7 @@ $.ajax({
       if (minDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML) < minDate)
         minDate = moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)
         // if(maxDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)>minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)
-      const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
+      const popupHeading = '<p>Please wait, I am looking for my SensorML</p><div class="progress"><div class="indeterminate"></div></div>'
       stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
         // console.log(e.target.options.beginTime, e.target.options.endTime);
