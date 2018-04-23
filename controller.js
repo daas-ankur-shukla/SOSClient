@@ -85,7 +85,10 @@ const obsPropMap = {
   'mean_wave_direction': 'Mean Wave Direction',
   'principal_wave_direction': 'Principal Wave Direcion',
   'polar_coordinate_r1': 'Polar Coordinate R1',
-  'polar_coordinate_r2': 'Polar Coordinate R2'
+  'polar_coordinate_r2': 'Polar Coordinate R2',
+  'wind_from_direction': 'Wind From Direction',
+  'wind_speed': 'Wind Speed',
+  'wind_speed_of_gust': 'Wind Speed Of Gust'
 }
 
 function isInArray(value, array) {
@@ -200,7 +203,7 @@ function describeStation(stationXML, stationID, propList, popup) {
       // console.log(i, propList.length);
       observationURL = getObservationURL(stationID, propList[i]);
       // console.log(observationURL);
-      temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL.toString() +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/>  ' + obsPropMap[propList[i]] + '</div>\n<div class="collapsible-body"></div></li>\n<li>\n<div>'
+      temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL.toString() +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/><span>' + obsPropMap[propList[i]] + '</span></div>\n<div class="collapsible-body"></div></li>\n<li>\n<div>'
   }
   popupContent = popupContent+temp+'</div>';
   // console.log(popupContent);
@@ -445,7 +448,7 @@ L.Control.TemporalControl = L.Control.extend({
         }
         // console.log(tempMin.format('LLLL'), tempMax.format('LLLL'));
         // console.log(low, _options.max - high)
-        $('#slider-timestamp').html('From ' + tempMin.format('LLLL') + ' To ' + tempMax.format('LLLL'));
+        $('#slider-timestamp').html('<blockquote>From ' + tempMin.format('LLLL') + ' To ' + tempMax.format('LLLL') + '</blockquote>');
       },
       stop: function(e, ui) {
         var map = _options.map;
@@ -531,6 +534,17 @@ function propertyFiltering(prop) {
   }
   refreshDisplay();
 };
+
+var propSelectorControl = L.control({position: 'bottomleft'});
+propSelectorControl.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info legend');
+    div.innerHTML = '<select id="propSelect"><option value="RESET" class="waves-effect waves-light" selected>All Properties</option><option value="sea_floor_depth_below_sea_surface" class="waves-effect waves-light">Sea Floor Depth Below Sea Surface</option><option value="air_pressure_at_sea_level" class="waves-effect waves-light">Air Pressure At Sea Level</option><option value="sea_water_temperature" class="waves-effect waves-light">Sea Water Temperature</option><option value="sea_water_salinity" class="waves-effect waves-light">Sea Water Salinity</option><option value="air_temperature" class="waves-effect waves-light">Air Temperature</option><option value="waves">Waves</option><option value="winds">Winds</option></select>';
+    div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
+    return div;
+};
+propSelectorControl.addTo(map);
+
+
 $('select').formSelect();
 $('#propSelect').on('change', function() {
   // console.log($('#propSelect').val());
