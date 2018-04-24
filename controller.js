@@ -503,6 +503,7 @@ function propertyFiltering(prop) {
     }
   } else {
     for (i = 0; i < stationCount - 1; i++) {
+      if(!propGroup.hasLayer(stationArray[i].marker))
       propGroup.addLayer(stationArray[i].marker);
     }
   }
