@@ -11,7 +11,6 @@ var stationArray = [];
 var spatialGroup = L.markerClusterGroup();
 var temporalGroup = L.markerClusterGroup();
 var propGroup = L.markerClusterGroup();
-var gaugeTarget = $('#gauges'); // your canvas element
 var gaugeOptions = {
   angle: 0.15, // The span of the gauge arc
   lineWidth: 0.44, // The line thickness
@@ -28,6 +27,12 @@ var gaugeOptions = {
   strokeColor: '#E0E0E0', // to see which ones work best for you
   generateGradient: true,
   highDpiSupport: true, // High resolution support
+  staticLabels: {
+    font: "10px sans-serif",  // Specifies font
+    labels: [],  // Print labels at these values
+    color: "#000000",  // Optional: Label text color
+    fractionDigits: 0  // Optional: Numerical precision. 0=round off.
+},
 };
 
 var stationGroups = L.markerClusterGroup({
@@ -88,9 +93,41 @@ const obsPropMap = {
   'polar_coordinate_r2': 'Polar Coordinate R2',
   'wind_from_direction': 'Wind From Direction',
   'wind_speed': 'Wind Speed',
-  'wind_speed_of_gust': 'Wind Speed Of Gust'
-}
+  'wind_speed_of_gust': 'Wind Speed Of Gust',
+  'direction_of_sea_water_velocity': 'Direction Of Sea Water Velocity',
+  'sea_water_speed': 'Sea Water Speed',
+  'upward_sea_water_velocity': 'Upward Sea Water Velocity',
+  'error_velocity': 'Error Velocity',
+  'platform_orientation': 'Platform Orientation',
+  'platform_pitch_angle': 'Platform Pitch Angle',
+  'platform_roll_angle': 'Platform Roll Angle',
+  'sea_water_temperature': 'Sea Water Temperature',
+  'pct_good_3_beam': 'PCT Good 3 Beam',
+  'pct_good_4_beam': 'PCT Good 4 Beam',
+  'pct_rejected': 'PCT Rejected',
+  'pct_bad': 'PCT Band',
+  'echo_intensity_beam1': 'Echo Intesity Beam1',
+  'echo_intensity_beam2': 'Echo Intesity Beam2',
+  'echo_intensity_beam3': 'Echo Intesity Beam3',
+  'echo_intensity_beam4': 'Echo Intesity Beam4',
+  'correlation_maginitude_beam1': 'Correlation Magnitude Beam1',
+  'correlation_maginitude_beam2': 'Correlation Magnitude Beam2',
+  'correlation_maginitude_beam3': 'Correlation Magnitude Beam3',
+  'correlation_maginitude_beam4': 'Correlation Magnitude Beam4',
+  'quality_flags': 'Qualitu Flags'
+};
 
+const subPropArray = ['sea_floor_depth_below_sea_surface', 'air_pressure_at_sea_level', 'sea_water_temperature', 'sea_water_salinity', 'air_temperature', 'sea_water_speed', 'sea_surface_wind_wave_significant_height', 'wind_speed']
+const subPropRange = {
+  'sea_floor_depth_below_sea_surface': [0, 10994, 'Meters'],
+  'air_pressure_at_sea_level': [337, 1079, 'hPa'],
+  'sea_water_temperature': [-2.6, 40, 'C'],
+  'sea_water_salinity': [31, 38, 'g/kg'],
+  'air_temperature': [-5, 50, 'C'],
+  'sea_water_speed': [0, 1500, 'm/s'],
+  'sea_surface_wind_wave_significant_height': [0, 20.1, 'Meters'],
+  'wind_speed': [0, 54, 'km/h']
+}
 function isInArray(value, array) {
   return array.indexOf(value) > -1;
 }
@@ -214,19 +251,38 @@ function describeStation(stationXML, stationID, propList, popup) {
     onOpenStart: function(el){
         //$('li.roles_icon', this).html('remove');
         var obsURL = el.children[0].attributes[1].nodeValue + '&responseformat=text/xml;subtype="om/1.0.0"&eventtime=latest'.toString();
-        // var span = el.children[1].
-        console.log(obsURL);
+        // console.log(obsURL);
             $.get(obsURL).done(function(data) {
-              console.log(data);
+              // console.log(data);
               subProps = data.getElementsByTagName('swe:CompositePhenomenon')[0].children;
               subPropVals = data.getElementsByTagName('swe2:DataStream')[0].children[2].innerHTML.split(',');
-              console.log(subProps, subPropVals);
+              // console.log(subProps, subPropVals);
               temp = '';
+              var gaugeArray;
+              var displaySubProp;
               for(var j=1;j<subProps.length;j++) {
-                console.log(subProps[j].attributes[0].nodeValue.split('/').pop());
-                temp = temp + '<p>' + obsPropMap[subProps[j].attributes[0].nodeValue.split('/').pop()] + ': ' + subPropVals[j] + '</p>';
+                subProp = subProps[j].attributes[0].nodeValue.split('/').pop()
+                // console.log(subProp, subPropVals[j]);
+                if(subPropVals[j]!='')
+                temp = temp + '<p>' + obsPropMap[subProp] + ': ' + subPropVals[j] + '</p>';
+                if(isInArray(subProp,subPropArray)) {
+                  gaugeArray = [subPropRange[subProp][0], parseFloat(subPropVals[j]), subPropRange[subProp][1]];
+                  displaySubProp = obsPropMap[subProp];
+                }
               }
-              console.log(temp)
+              // console.log(gaugeArray);
+              // console.log(!isNaN(gaugeArray[1]), gaugeArray[1]!='');
+              if(!isNaN(gaugeArray[1]) && gaugeArray[1]!='') {
+                var toastHTML = '<div><p style="color:black;">' + displaySubProp + '</p></div><div><canvas id="gauge"></canvas></div>';
+                M.toast({html: toastHTML, classes: 'rounded, white'});
+                var targetCanvas = document.getElementById('gauge');
+                gaugeOptions.staticLabels.labels = gaugeArray;
+                // console.log(gaugeOptions);
+                var gauge = new Gauge(targetCanvas).setOptions(gaugeOptions); // create sexy gauge!
+                gauge.maxValue = gaugeArray[2]; // set max gauge value
+                gauge.setMinValue(gaugeArray[0]);  // set min value
+                gauge.set(gaugeArray[1]); // set actual value
+              }
               $('.collapsible-body').html('<span>'+temp+'</span>');
             });
     },
@@ -234,6 +290,11 @@ function describeStation(stationXML, stationID, propList, popup) {
         //switch back icon to normal
         // console.log(el);
         $('.collapsible-body').html('');
+        var toastElement = document.querySelector('.toast');
+        if(toastElement!=null) {
+          var toastInstance = M.Toast.getInstance(toastElement);
+          toastInstance.dismiss();
+        }
     }
 
 });
@@ -538,12 +599,12 @@ function propertyFiltering(prop) {
 var propSelectorControl = L.control({position: 'bottomleft'});
 propSelectorControl.onAdd = function (map) {
     var div = L.DomUtil.create('div', 'info legend');
-    div.innerHTML = '<select id="propSelect"><option value="RESET" class="waves-effect waves-light" selected>All Properties</option><option value="sea_floor_depth_below_sea_surface" class="waves-effect waves-light">Sea Floor Depth Below Sea Surface</option><option value="air_pressure_at_sea_level" class="waves-effect waves-light">Air Pressure At Sea Level</option><option value="sea_water_temperature" class="waves-effect waves-light">Sea Water Temperature</option><option value="sea_water_salinity" class="waves-effect waves-light">Sea Water Salinity</option><option value="air_temperature" class="waves-effect waves-light">Air Temperature</option><option value="waves">Waves</option><option value="winds">Winds</option></select>';
+    div.innerHTML = '<div id="selector"><select id="propSelect"><option value="RESET" class="waves-effect waves-light" selected>All Properties</option><option value="sea_floor_depth_below_sea_surface" class="waves-effect waves-light">Sea Floor Depth Below Sea Surface</option><option value="air_pressure_at_sea_level" class="waves-effect waves-light">Air Pressure At Sea Level</option><option value="sea_water_temperature" class="waves-effect waves-light">Sea Water Temperature</option><option value="sea_water_salinity" class="waves-effect waves-light">Sea Water Salinity</option><option value="air_temperature" class="waves-effect waves-light">Air Temperature</option><option value="currents">Currents</option><option value="waves">Waves</option><option value="winds">Winds</option></select></div>';
     div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
     return div;
 };
 propSelectorControl.addTo(map);
-
+var gaugeTarget = $('#gauge'); // your canvas element
 
 $('select').formSelect();
 $('#propSelect').on('change', function() {
