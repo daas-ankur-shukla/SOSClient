@@ -11,6 +11,29 @@ var stationArray = [];
 var spatialGroup = L.markerClusterGroup();
 var temporalGroup = L.markerClusterGroup();
 var propGroup = L.markerClusterGroup();
+var gaugeOptions = {
+  angle: 0.15, // The span of the gauge arc
+  lineWidth: 0.44, // The line thickness
+  radiusScale: 1, // Relative radius
+  pointer: {
+    length: 0.6, // // Relative to gauge radius
+    strokeWidth: 0.035, // The thickness
+    color: '#000000' // Fill color
+  },
+  limitMax: false, // If false, max value increases automatically if value > maxValue
+  limitMin: false, // If true, the min value of the gauge will be fixed
+  colorStart: '#6FADCF', // Colors
+  colorStop: '#8FC0DA', // just experiment with them
+  strokeColor: '#E0E0E0', // to see which ones work best for you
+  generateGradient: true,
+  highDpiSupport: true, // High resolution support
+  staticLabels: {
+    font: "10px sans-serif",  // Specifies font
+    labels: [],  // Print labels at these values
+    color: "#000000",  // Optional: Label text color
+    fractionDigits: 0  // Optional: Numerical precision. 0=round off.
+},
+};
 
 var stationGroups = L.markerClusterGroup({
   chunkedLoading: true,
@@ -49,9 +72,62 @@ const obsPropMap = {
   'air_temperature': 'Air Temperature',
   'currents': 'Currents',
   'waves': 'Waves',
-  'winds': 'Winds'
-}
+  'winds': 'Winds',
+  'sea_surface_wave_significant_height': 'Sea Surface Wave Significant Height',
+  'sea_surface_wave_peak_period': 'Sea Surface Wave Peak Period',
+  'sea_surface_wave_mean_period': 'Sea Surface Wave Mean Period',
+  'sea_surface_swell_wave_significant_height': 'Sea Surface Swell Wave Significant Height',
+  'sea_surface_swell_wave_period': 'Sea Surface Swell Wave Period',
+  'sea_surface_wind_wave_significant_height': 'Sea Surface Wind Wave Significant Height',
+  'sea_surface_wind_wave_period': 'Sea Surface Wind Wave Period',
+  'sea_water_temperature': 'Sea Water Temperature',
+  'sea_surface_wave_to_direction': 'Sea Surface Wave To Direction',
+  'sea_surface_swell_wave_to_direction': 'Sea Surface Swell Wave To Direction',
+  'sea_surface_wind_wave_to_direction': 'Sea Surface Wind Wave To Direction',
+  'center_frequency': 'Center Frequency',
+  'bandwidth': 'Bandwidth',
+  'spectral_energy': 'Spectral Energy',
+  'mean_wave_direction': 'Mean Wave Direction',
+  'principal_wave_direction': 'Principal Wave Direcion',
+  'polar_coordinate_r1': 'Polar Coordinate R1',
+  'polar_coordinate_r2': 'Polar Coordinate R2',
+  'wind_from_direction': 'Wind From Direction',
+  'wind_speed': 'Wind Speed',
+  'wind_speed_of_gust': 'Wind Speed Of Gust',
+  'direction_of_sea_water_velocity': 'Direction Of Sea Water Velocity',
+  'sea_water_speed': 'Sea Water Speed',
+  'upward_sea_water_velocity': 'Upward Sea Water Velocity',
+  'error_velocity': 'Error Velocity',
+  'platform_orientation': 'Platform Orientation',
+  'platform_pitch_angle': 'Platform Pitch Angle',
+  'platform_roll_angle': 'Platform Roll Angle',
+  'sea_water_temperature': 'Sea Water Temperature',
+  'pct_good_3_beam': 'PCT Good 3 Beam',
+  'pct_good_4_beam': 'PCT Good 4 Beam',
+  'pct_rejected': 'PCT Rejected',
+  'pct_bad': 'PCT Band',
+  'echo_intensity_beam1': 'Echo Intesity Beam1',
+  'echo_intensity_beam2': 'Echo Intesity Beam2',
+  'echo_intensity_beam3': 'Echo Intesity Beam3',
+  'echo_intensity_beam4': 'Echo Intesity Beam4',
+  'correlation_maginitude_beam1': 'Correlation Magnitude Beam1',
+  'correlation_maginitude_beam2': 'Correlation Magnitude Beam2',
+  'correlation_maginitude_beam3': 'Correlation Magnitude Beam3',
+  'correlation_maginitude_beam4': 'Correlation Magnitude Beam4',
+  'quality_flags': 'Qualitu Flags'
+};
 
+const subPropArray = ['sea_floor_depth_below_sea_surface', 'air_pressure_at_sea_level', 'sea_water_temperature', 'sea_water_salinity', 'air_temperature', 'sea_water_speed', 'sea_surface_wind_wave_significant_height', 'wind_speed']
+const subPropRange = {
+  'sea_floor_depth_below_sea_surface': [0, 10994, 'Meters'],
+  'air_pressure_at_sea_level': [337, 1079, 'hPa'],
+  'sea_water_temperature': [-2.6, 40, 'C'],
+  'sea_water_salinity': [31, 38, 'g/kg'],
+  'air_temperature': [-5, 50, 'C'],
+  'sea_water_speed': [0, 1500, 'm/s'],
+  'sea_surface_wind_wave_significant_height': [0, 20.1, 'Meters'],
+  'wind_speed': [0, 54, 'km/h']
+}
 function isInArray(value, array) {
   return array.indexOf(value) > -1;
 }
@@ -77,9 +153,15 @@ var OSMLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 
 map.addLayer(OSMLayer);
 
+map.on('popupclose', function(e) {
+  // console.log('popup closed');
+  gaugeTarget.html('');
+});
+
 function getObservationURL(id, property) {
   // console.log(property)
-  return 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:' + id + '&observedproperty=' + property + '&responseformat=text/xml;subtype=\"om/1.0.0\"&eventtime=latest';
+  var temp = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:' + id + '&observedproperty=' + property;
+  return temp.toString();
 }
 
 function StringToXMLDom(string) {
@@ -95,10 +177,10 @@ function StringToXMLDom(string) {
   return xmlDoc;
 }
 
-function getPropertyData(getObservationXML) {
-  observedProperty = StringToXMLDom(getObservationXML);
-  // console.log(getObservationXML)
-}
+// function getPropertyData(getObservationXML) {
+//   observedProperty = StringToXMLDom(getObservationXML);
+//   // console.log(getObservationXML)
+// }
 
 function getProperties(observedProps) {
   var props = [];
@@ -111,42 +193,121 @@ function getProperties(observedProps) {
   return props;
 }
 
-function describeStation(stationXML, stationID, propList) {
-  var props = [];
-  // console.log(propList, propList.length)
-  for (var i = 0; i < propList.length; i++) {
-    // propName = observedProps[i].outerHTML.split('/').slice(-2, -1)[0].split('"')[0]
-    // console.log(propList[i])
-    observationURL = getObservationURL(stationID, propList[i])
-    $.get(observationURL).done(function(data) {
-      observedPropertyData = getPropertyData(data);
+// function describeStation(stationXML, stationID, propList) {
+//   var props = [];
+//   // console.log(propList, propList.length)
+//   for (var i = 0; i < propList.length; i++) {
+//     // propName = observedProps[i].outerHTML.split('/').slice(-2, -1)[0].split('"')[0]
+//     // console.log(propList[i])
+//     observationURL = getObservationURL(stationID, propList[i])
+//     console.log(propList[i]);
+//     $.get(observationURL).done(function(data) {
+//       console.log(data);
+//
+//       propVal = data.getElementsByTagName('swe2:DataStream')[0].children[2];
+//       if(stationID = 41047)  console.log(propVal);
+//     });
+//     props.push('<tr><td width=\'15%\'><img src=\'./images/' + propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/></td><td width=\'85%\'><a href=\'' + observationURL + '\' target=\'_blank\'>   ' + obsPropMap[propList[i]] + '</a></td></tr>');
+//   }
+//   // console.log(props)
+//   var stationInfo = stationXML.children[0].children[0].children[0].children;
+//   // console.log(stationInfo)
+//   for(var i=0;i<propList.length;i++) {
+//     console.log('adding canvas', gaugeTarget)
+//     gaugeTarget.append('<canvas id='+i+'></canvas>');
+//     var targetCanvas = document.getElementById(i);
+//     var gauge = new Gauge(targetCanvas).setOptions(gaugeOptions); // create sexy gauge!
+//     gauge.maxValue = 3000; // set max gauge value
+//     gauge.setMinValue(0);  // set min value
+//     gauge.set(1250); // set actual value
+//   }
+//   if (stationInfo.length > 0) {
+//     var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr>' + props.join('\n') + '</table>';
+//     // var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + '\nTo know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>,\n<p>To get my observations click on the respective links</a>' + '\n<ol>' + props.join('\n')+'</ol>';
+//     // var des = '<iframe src=\"http://www.ndbc.noaa.gov/widgets/station_page.php?station='+stationID+'\" style=\"border: solid thin #3366ff; width:300px; height:300px\"></iframe>'
+//     return des;
+//   } else {
+//     return '<p>Sorry, I am lost :('
+//   }
+// }
 
-    });
-    props.push('<tr><td width=\'15%\'><img src=\'./images/' + propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/></td><td width=\'85%\'><a href=\'' + observationURL + '\' target=\'_blank\'>   ' + obsPropMap[propList[i]] + '</a></td></tr>');
+function describeStation(stationXML, stationID, propList, popup) {
+  // var popupContent = '<table style=\'width:100%\' border=\'0\'><tr><td><a style=\'font-size=50%;margin-top:0.5em;\'>NDBC Station '+stationID+'</a></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' class=\"right-align\"/></td></tr></table>\n<ul class=\"collapsible\">\n'
+  var popupContent = '<img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' class=\"left-align\"/><h5 style=\"display:inline\" class="left-align">   NDBC Station '+stationID+'</h5>\n<ul class=\"collapsible\">\n'
+  // var popupContent = '<div class="col s12 m8 offset-m2 l6 offset-l3"><div class="card-panel grey lighten-5 z-depth-1"><div class="row valign-wrapper"><div class="col s2"><img src="images/ndbc_logo.png" alt="" class="circle responsive-img"></div><div class="col s10"><span class="black-text">NDBC Station '+stationID+'</span></div></div></div></div><div><ul class=\"collapsible\">\n'
+  temp = ''
+  for (var i = 0; i < propList.length; i++) {
+      // console.log(i, propList.length);
+      observationURL = getObservationURL(stationID, propList[i]);
+      // console.log(observationURL);
+      temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL.toString() +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/><span>' + obsPropMap[propList[i]] + '</span></div>\n<div class="collapsible-body"></div></li>\n<li>\n<div>'
   }
-  // console.log(props)
-  var stationInfo = stationXML.children[0].children[0].children[0].children;
-  // console.log(stationInfo)
-  if (stationInfo.length > 0) {
-    var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr>' + props.join('\n') + '</table>';
-    // var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + '\nTo know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>,\n<p>To get my observations click on the respective links</a>' + '\n<ol>' + props.join('\n')+'</ol>';
-    // var des = '<iframe src=\"http://www.ndbc.noaa.gov/widgets/station_page.php?station='+stationID+'\" style=\"border: solid thin #3366ff; width:300px; height:300px\"></iframe>'
-    return des;
-  } else {
-    return '<p>Sorry, I am lost :('
-  }
+  popupContent = popupContent+temp+'</div>';
+  // console.log(popupContent);
+  popup.setContent(popupContent);
+  popup.update();
+  $('.collapsible').collapsible({
+    accordion: true,
+    onOpenStart: function(el){
+        //$('li.roles_icon', this).html('remove');
+        var obsURL = el.children[0].attributes[1].nodeValue + '&responseformat=text/xml;subtype="om/1.0.0"&eventtime=latest'.toString();
+        // console.log(obsURL);
+            $.get(obsURL).done(function(data) {
+              // console.log(data);
+              subProps = data.getElementsByTagName('swe:CompositePhenomenon')[0].children;
+              subPropVals = data.getElementsByTagName('swe2:DataStream')[0].children[2].innerHTML.split(',');
+              // console.log(subProps, subPropVals);
+              temp = '';
+              var gaugeArray;
+              var displaySubProp;
+              for(var j=1;j<subProps.length;j++) {
+                subProp = subProps[j].attributes[0].nodeValue.split('/').pop()
+                // console.log(subProp, subPropVals[j]);
+                if(subPropVals[j]!='')
+                temp = temp + '<p>' + obsPropMap[subProp] + ': ' + subPropVals[j] + '</p>';
+                if(isInArray(subProp,subPropArray)) {
+                  gaugeArray = [subPropRange[subProp][0], parseFloat(subPropVals[j]), subPropRange[subProp][1]];
+                  displaySubProp = obsPropMap[subProp];
+                }
+              }
+              // console.log(gaugeArray);
+              // console.log(!isNaN(gaugeArray[1]), gaugeArray[1]!='');
+              if(!isNaN(gaugeArray[1]) && gaugeArray[1]!='') {
+                var toastHTML = '<div><p style="color:black;">' + displaySubProp + '</p></div><div><canvas id="gauge"></canvas></div>';
+                M.toast({html: toastHTML, classes: 'rounded, white'});
+                var targetCanvas = document.getElementById('gauge');
+                gaugeOptions.staticLabels.labels = gaugeArray;
+                // console.log(gaugeOptions);
+                var gauge = new Gauge(targetCanvas).setOptions(gaugeOptions); // create sexy gauge!
+                gauge.maxValue = gaugeArray[2]; // set max gauge value
+                gauge.setMinValue(gaugeArray[0]);  // set min value
+                gauge.set(gaugeArray[1]); // set actual value
+              }
+              $('.collapsible-body').html('<span>'+temp+'</span>');
+            });
+    },
+    onCloseStart:function(el){
+        //switch back icon to normal
+        // console.log(el);
+        $('.collapsible-body').html('');
+        var toastElement = document.querySelector('.toast');
+        if(toastElement!=null) {
+          var toastInstance = M.Toast.getInstance(toastElement);
+          toastInstance.dismiss();
+        }
+    }
+
+});
 }
 
-var co;
-
 function refreshDisplay() {
-  for(var i=0;i<stationCount-1;i++) {
-    if(spatialGroup.hasLayer(stationArray[i].marker) && temporalGroup.hasLayer(stationArray[i].marker) && propGroup.hasLayer(stationArray[i].marker)) {
-      if(!stationGroups.hasLayer(stationArray[i].marker)) {
+  for (var i = 0; i < stationCount - 1; i++) {
+    if (spatialGroup.hasLayer(stationArray[i].marker) && temporalGroup.hasLayer(stationArray[i].marker) && propGroup.hasLayer(stationArray[i].marker)) {
+      if (!stationGroups.hasLayer(stationArray[i].marker)) {
         stationGroups.addLayer(stationArray[i].marker);
       }
-    }else {
-      if(stationGroups.hasLayer(stationArray[i].marker)) {
+    } else {
+      if (stationGroups.hasLayer(stationArray[i].marker)) {
         stationGroups.removeLayer(stationArray[i].marker);
       }
     }
@@ -223,12 +384,12 @@ L.Control.RemoveAll = L.Control.extend({
     var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
     L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation).addListener(controlDiv, 'click', L.DomEvent.preventDefault).addListener(controlDiv, 'click', function() {
       drawnItems.clearLayers();
-    for(var i=0;i<stationCount-1;i++) {
-      if(!spatialGroup.hasLayer(stationArray[i].marker)) {
-        spatialGroup.addLayer(stationArray[i].marker);
+      for (var i = 0; i < stationCount - 1; i++) {
+        if (!spatialGroup.hasLayer(stationArray[i].marker)) {
+          spatialGroup.addLayer(stationArray[i].marker);
+        }
       }
-    }
-    refreshDisplay();
+      refreshDisplay();
     });
     var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
     controlUI.title = 'Remove All Polygons';
@@ -309,8 +470,8 @@ L.Control.TemporalControl = L.Control.extend({
   },
 
   onRemove: function(map) {
-    for(var i=0;i<stationCount-1;i++) {
-      if(!temporalGroup.hasLayer(stationArray[i].marker)) {
+    for (var i = 0; i < stationCount - 1; i++) {
+      if (!temporalGroup.hasLayer(stationArray[i].marker)) {
         temporalGroup.addLayer(stationArray[i].marker);
       }
     }
@@ -330,7 +491,7 @@ L.Control.TemporalControl = L.Control.extend({
       min: _options.min,
       max: _options.max,
       step: 1,
-      slide: function(e, ui ) {
+      slide: function(e, ui) {
         var low = ui.values[0];
         var high = ui.values[1];
         var dateValMin = moment(_options.minDate);
@@ -338,17 +499,17 @@ L.Control.TemporalControl = L.Control.extend({
         var tempMin;
         var tempMax;
         // console.log(ui.handleIndex)
-        if(ui.handleIndex) {
+        if (ui.handleIndex) {
           // console.log('2nd moving')
           tempMin = moment(dateValMin);
           tempMax = moment(dateValMax.subtract(_options.max - high, 'days'));
-        }else if((!ui.handleIndex)) {
+        } else if ((!ui.handleIndex)) {
           tempMin = moment(dateValMin.add(low, 'days'));
           tempMax = moment(dateValMax);
         }
         // console.log(tempMin.format('LLLL'), tempMax.format('LLLL'));
         // console.log(low, _options.max - high)
-        $('#slider-timestamp').html('From '+tempMin.format('LLLL')+' To '+tempMax.format('LLLL'));
+        $('#slider-timestamp').html('<blockquote>From ' + tempMin.format('LLLL') + ' To ' + tempMax.format('LLLL') + '</blockquote>');
       },
       stop: function(e, ui) {
         var map = _options.map;
@@ -358,8 +519,8 @@ L.Control.TemporalControl = L.Control.extend({
         // console.log(low==_options.min && high==_options.max)
         if (low == _options.min && high == _options.max) {
           // console.log('resetting')
-          for(var i=0;i<stationCount-1;i++) {
-            if(!temporalGroup.hasLayer(stationArray[i].marker)) {
+          for (var i = 0; i < stationCount - 1; i++) {
+            if (!temporalGroup.hasLayer(stationArray[i].marker)) {
               temporalGroup.addLayer(stationArray[i].marker);
             }
           }
@@ -369,11 +530,11 @@ L.Control.TemporalControl = L.Control.extend({
           var dateValMax = moment(_options.maxDate);
           var tempMin;
           var tempMax;
-          if(low == _options.min) {
+          if (low == _options.min) {
             // console.log('2nd moving')
             tempMin = moment(dateValMin);
             tempMax = moment(dateValMax.subtract(_options.max - high, 'days'));
-          }else if(high == _options.max) {
+          } else if (high == _options.max) {
             tempMin = moment(dateValMin.add(low, 'days'));
             tempMax = moment(dateValMax);
           }
@@ -435,7 +596,19 @@ function propertyFiltering(prop) {
   refreshDisplay();
 };
 
+var propSelectorControl = L.control({position: 'bottomleft'});
+propSelectorControl.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info legend');
+    div.innerHTML = '<div id="selector"><select id="propSelect"><option value="RESET" class="waves-effect waves-light" selected>All Properties</option><option value="sea_floor_depth_below_sea_surface" class="waves-effect waves-light">Sea Floor Depth Below Sea Surface</option><option value="air_pressure_at_sea_level" class="waves-effect waves-light">Air Pressure At Sea Level</option><option value="sea_water_temperature" class="waves-effect waves-light">Sea Water Temperature</option><option value="sea_water_salinity" class="waves-effect waves-light">Sea Water Salinity</option><option value="air_temperature" class="waves-effect waves-light">Air Temperature</option><option value="currents">Currents</option><option value="waves">Waves</option><option value="winds">Winds</option></select></div>';
+    div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
+    return div;
+};
+propSelectorControl.addTo(map);
+var gaugeTarget = $('#gauge'); // your canvas element
+
+$('select').formSelect();
 $('#propSelect').on('change', function() {
+  // console.log($('#propSelect').val());
   propertyFiltering($('#propSelect').val())
 });
 
@@ -476,28 +649,26 @@ $.ajax({
       if (minDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML) < minDate)
         minDate = moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)
         // if(maxDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)>minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)
-      const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
+      const popupHeading = '<p>Please wait, I am looking for my SensorML</p><div class="progress"><div class="indeterminate"></div></div>'
       stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
         // console.log(e.target.options.beginTime, e.target.options.endTime);
         var id = this.options.stationID;
         var observedProps = this.options.observedProps
         var popup = e.target.getPopup();
+        var stationData;
         setTimeout(function() {
           // console.log(e.target, e.target.options.stationID)
           $.get(describeStationURL + id).done(function(data) {
             // console.log(data)
-            stationData = describeStation(data, id, observedProps);
-            popup.setContent(stationData);
-            popup.update();
+            describeStation(data, id, observedProps, popup);
+            // popup.setContent(stationData);
+            // popup.update();
           });
           //your code to be executed after 0.15 second
         }, 150);
-
       })
-      stationArray.push({
-        marker: stationMarker
-      });
+      stationArray.push({marker: stationMarker});
       spatialGroup.addLayer(stationMarker);
       temporalGroup.addLayer(stationMarker);
       propGroup.addLayer(stationMarker);
