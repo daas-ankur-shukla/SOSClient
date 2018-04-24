@@ -28,11 +28,11 @@ var gaugeOptions = {
   generateGradient: true,
   highDpiSupport: true, // High resolution support
   staticLabels: {
-    font: "10px sans-serif",  // Specifies font
-    labels: [],  // Print labels at these values
-    color: "#000000",  // Optional: Label text color
-    fractionDigits: 0  // Optional: Numerical precision. 0=round off.
-},
+    font: "10px sans-serif", // Specifies font
+    labels: [], // Print labels at these values
+    color: "#000000", // Optional: Label text color
+    fractionDigits: 0 // Optional: Numerical precision. 0=round off.
+  }
 };
 
 var stationGroups = L.markerClusterGroup({
@@ -117,15 +117,38 @@ const obsPropMap = {
   'quality_flags': 'Qualitu Flags'
 };
 
-const subPropArray = ['sea_floor_depth_below_sea_surface', 'air_pressure_at_sea_level', 'sea_water_temperature', 'sea_water_salinity', 'air_temperature', 'sea_water_speed', 'sea_surface_wind_wave_significant_height', 'wind_speed']
+const subPropArray = [
+  'sea_floor_depth_below_sea_surface',
+  'air_pressure_at_sea_level',
+  'sea_water_temperature',
+  'sea_water_salinity',
+  'air_temperature',
+  'sea_water_speed',
+  'sea_surface_wind_wave_significant_height',
+  'wind_speed'
+]
 const subPropRange = {
-  'sea_floor_depth_below_sea_surface': [0, 10994, 'Meters'],
-  'air_pressure_at_sea_level': [337, 1079, 'hPa'],
-  'sea_water_temperature': [-2.6, 40, 'C'],
-  'sea_water_salinity': [31, 38, 'g/kg'],
-  'air_temperature': [-5, 50, 'C'],
-  'sea_water_speed': [0, 1500, 'm/s'],
-  'sea_surface_wind_wave_significant_height': [0, 20.1, 'Meters'],
+  'sea_floor_depth_below_sea_surface': [
+    0, 10994, 'Meters'
+  ],
+  'air_pressure_at_sea_level': [
+    337, 1079, 'hPa'
+  ],
+  'sea_water_temperature': [
+    -2.6, 40, 'C'
+  ],
+  'sea_water_salinity': [
+    31, 38, 'g/kg'
+  ],
+  'air_temperature': [
+    -5, 50, 'C'
+  ],
+  'sea_water_speed': [
+    0, 1500, 'm/s'
+  ],
+  'sea_surface_wind_wave_significant_height': [
+    0, 20.1, 'Meters'
+  ],
   'wind_speed': [0, 54, 'km/h']
 }
 function isInArray(value, array) {
@@ -179,63 +202,67 @@ function getProperties(observedProps) {
 }
 
 function describeStation(stationXML, stationID, propList, popup) {
-  var popupContent = '<img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' class=\"left-align\"/><h5 style=\"display:inline\" class="left-align">   NDBC Station '+stationID+'</h5>\n<ul class=\"collapsible\">\n'
+  var popupContent = '<img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' class=\"left-align\"/><h5 style=\"display:inline\" class="left-align">   NDBC Station ' + stationID + '</h5>\n<ul class=\"collapsible\">\n'
   temp = ''
   for (var i = 0; i < propList.length; i++) {
-      observationURL = getObservationURL(stationID, propList[i]);
-      temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL.toString() +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/><span>' + obsPropMap[propList[i]] + '</span></div>\n<div class="collapsible-body"></div></li>\n<li>\n<div>'
+    observationURL = getObservationURL(stationID, propList[i]);
+    temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL.toString() + '\"><img src=\'/images/' + propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/><span>' + obsPropMap[propList[i]] + '</span></div>\n<div class="collapsible-body"></div></li>\n<li>\n<div>'
   }
-  popupContent = popupContent+temp+'</div>';
+  popupContent = popupContent + temp + '</div>';
   popup.setContent(popupContent);
   popup.update();
   $('.collapsible').collapsible({
     accordion: true,
-    onOpenStart: function(el){
-        var obsURL = el.children[0].attributes[1].nodeValue + '&responseformat=text/xml;subtype="om/1.0.0"&eventtime=latest'.toString();
-            $.get(obsURL).done(function(data) {
-              // console.log(data);
-              subProps = data.getElementsByTagName('swe:CompositePhenomenon')[0].children;
-              subPropVals = data.getElementsByTagName('swe2:DataStream')[0].children[2].innerHTML.split(',');
-              // console.log(subProps, subPropVals);
-              temp = '';
-              var gaugeArray;
-              var displaySubProp;
-              for(var j=1;j<subProps.length;j++) {
-                subProp = subProps[j].attributes[0].nodeValue.split('/').pop()
-                // console.log(subProp, subPropVals[j]);
-                if(subPropVals[j]!='')
-                temp = temp + '<p>' + obsPropMap[subProp] + ': ' + subPropVals[j] + '</p>';
-                if(isInArray(subProp,subPropArray)) {
-                  gaugeArray = [subPropRange[subProp][0], parseFloat(subPropVals[j]), subPropRange[subProp][1]];
-                  displaySubProp = obsPropMap[subProp];
-                }
-              }
-              // console.log(gaugeArray);
-              // console.log(!isNaN(gaugeArray[1]), gaugeArray[1]!='');
-              if(!isNaN(gaugeArray[1]) && gaugeArray[1]!='') {
-                var toastHTML = '<div><p style="color:black;">' + displaySubProp + '</p></div><div><canvas id="gauge"></canvas></div>';
-                M.toast({html: toastHTML, classes: 'rounded, white'});
-                var targetCanvas = document.getElementById('gauge');
-                gaugeOptions.staticLabels.labels = gaugeArray;
-                // console.log(gaugeOptions);
-                var gauge = new Gauge(targetCanvas).setOptions(gaugeOptions); // create sexy gauge!
-                gauge.maxValue = gaugeArray[2]; // set max gauge value
-                gauge.setMinValue(gaugeArray[0]);  // set min value
-                gauge.set(gaugeArray[1]); // set actual value
-              }
-              $('.collapsible-body').html('<span>'+temp+'</span>');
-            });
-    },
-    onCloseStart:function(el){
-        $('.collapsible-body').html('');
-        var toastElement = document.querySelector('.toast');
-        if(toastElement!=null) {
-          var toastInstance = M.Toast.getInstance(toastElement);
-          toastInstance.dismiss();
+    onOpenStart: function(el) {
+      var obsURL = el.children[0].attributes[1].nodeValue + '&responseformat=text/xml;subtype="om/1.0.0"&eventtime=latest'.toString();
+      $.get(obsURL).done(function(data) {
+        // console.log(data);
+        subProps = data.getElementsByTagName('swe:CompositePhenomenon')[0].children;
+        subPropVals = data.getElementsByTagName('swe2:DataStream')[0].children[2].innerHTML.split(',');
+        // console.log(subProps, subPropVals);
+        temp = '';
+        var gaugeArray;
+        var displaySubProp;
+        for (var j = 1; j < subProps.length; j++) {
+          subProp = subProps[j].attributes[0].nodeValue.split('/').pop()
+          // console.log(subProp, subPropVals[j]);
+          if (subPropVals[j] != '')
+            temp = temp + '<p>' + obsPropMap[subProp] + ': ' + subPropVals[j] + '</p>';
+          if (isInArray(subProp, subPropArray)) {
+            gaugeArray = [
+              subPropRange[subProp][0],
+              parseFloat(subPropVals[j]),
+              subPropRange[subProp][1]
+            ];
+            displaySubProp = obsPropMap[subProp];
+          }
         }
+        // console.log(gaugeArray);
+        // console.log(!isNaN(gaugeArray[1]), gaugeArray[1]!='');
+        if (!isNaN(gaugeArray[1]) && gaugeArray[1] != '') {
+          var toastHTML = '<div><p style="color:black;">' + displaySubProp + '</p></div><div><canvas id="gauge"></canvas></div>';
+          M.toast({html: toastHTML, classes: 'rounded, white'});
+          var targetCanvas = document.getElementById('gauge');
+          gaugeOptions.staticLabels.labels = gaugeArray;
+          // console.log(gaugeOptions);
+          var gauge = new Gauge(targetCanvas).setOptions(gaugeOptions); // create sexy gauge!
+          gauge.maxValue = gaugeArray[2]; // set max gauge value
+          gauge.setMinValue(gaugeArray[0]); // set min value
+          gauge.set(gaugeArray[1]); // set actual value
+        }
+        $('.collapsible-body').html('<span>' + temp + '</span>');
+      });
+    },
+    onCloseStart: function(el) {
+      $('.collapsible-body').html('');
+      var toastElement = document.querySelector('.toast');
+      if (toastElement != null) {
+        var toastInstance = M.Toast.getInstance(toastElement);
+        toastInstance.dismiss();
+      }
     }
 
-});
+  });
 }
 
 function refreshDisplay() {
@@ -483,11 +510,11 @@ function propertyFiltering(prop) {
 };
 
 var propSelectorControl = L.control({position: 'bottomleft'});
-propSelectorControl.onAdd = function (map) {
-    var div = L.DomUtil.create('div', 'info legend');
-    div.innerHTML = '<div id="selector"><select id="propSelect"><option value="RESET" class="waves-effect waves-light" selected>All Properties</option><option value="sea_floor_depth_below_sea_surface" class="waves-effect waves-light">Sea Floor Depth Below Sea Surface</option><option value="air_pressure_at_sea_level" class="waves-effect waves-light">Air Pressure At Sea Level</option><option value="sea_water_temperature" class="waves-effect waves-light">Sea Water Temperature</option><option value="sea_water_salinity" class="waves-effect waves-light">Sea Water Salinity</option><option value="air_temperature" class="waves-effect waves-light">Air Temperature</option><option value="currents">Currents</option><option value="waves">Waves</option><option value="winds">Winds</option></select></div>';
-    div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
-    return div;
+propSelectorControl.onAdd = function(map) {
+  var div = L.DomUtil.create('div', 'info legend');
+  div.innerHTML = '<div id="selector"><select id="propSelect"><option value="RESET" class="waves-effect waves-light" selected>All Properties</option><option value="sea_floor_depth_below_sea_surface" class="waves-effect waves-light">Sea Floor Depth Below Sea Surface</option><option value="air_pressure_at_sea_level" class="waves-effect waves-light">Air Pressure At Sea Level</option><option value="sea_water_temperature" class="waves-effect waves-light">Sea Water Temperature</option><option value="sea_water_salinity" class="waves-effect waves-light">Sea Water Salinity</option><option value="air_temperature" class="waves-effect waves-light">Air Temperature</option><option value="currents">Currents</option><option value="waves">Waves</option><option value="winds">Winds</option></select></div>';
+  div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
+  return div;
 };
 propSelectorControl.addTo(map);
 var gaugeTarget = $('#gauge'); // your canvas element
