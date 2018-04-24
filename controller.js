@@ -1,12 +1,17 @@
 // Variable definitions
 var map
-var ndbc_sos = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetCapabilities&service=SOS'
-var describeStationURL = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=DescribeSensor&service=SOS&version=1.0.0&outputformat=text/xml;subtype=%22sensorML/1.0.1%22&procedure=urn:ioos:station:wmo:'
-var local_sos = 'https://'
+const ndbc_sos = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetCapabilities&service=SOS'
+const describeStationURL = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=DescribeSensor&service=SOS&version=1.0.0&outputformat=text/xml;subtype=%22sensorML/1.0.1%22&procedure=urn:ioos:station:wmo:'
+const local_sos = 'https://'
 var GetCapabilitiesXML
 var markerJSON
 var stationCount
-var stationArray = []
+var stationArray = [];
+
+var spatialGroup = L.markerClusterGroup();
+var temporalGroup = L.markerClusterGroup();
+var propGroup = L.markerClusterGroup();
+
 var stationGroups = L.markerClusterGroup({
   chunkedLoading: true,
   iconCreateFunction: function(cluster) {
@@ -36,7 +41,7 @@ var stationGroups = L.markerClusterGroup({
 var minDate = '';
 var maxDate = '';
 
-var obsPropMap = {
+const obsPropMap = {
   'sea_floor_depth_below_sea_surface': 'Sea Floor Depth Below Sea Surface',
   'air_pressure_at_sea_level': 'Air Pressure At Sea Level',
   'sea_water_temperature': 'Sea Water Temperature',
@@ -61,9 +66,7 @@ function isInArray(value, array) {
 // }
 
 var stationMarker
-var map = L.map('map', {
-  minZoom: 2
-}).setView([
+var map = L.map('map', {minZoom: 1}).setView([
   19.228825, 72.854110
 ], 1.5);
 
@@ -125,19 +128,6 @@ function describeStation(stationXML, stationID, propList) {
   var stationInfo = stationXML.children[0].children[0].children[0].children;
   // console.log(stationInfo)
   if (stationInfo.length > 0) {
-    // var stationDes = {
-    //   id: stationID,
-    //   description: stationInfo[0].innerHTML,
-    //   name: 'Station-' + stationID,
-    //   beginTime: -1,
-    //   endTIme: -1
-    // }
-    // if (stationInfo.length == 13) {
-    //   stationDes['beginTime'] = stationInfo[5].children[0].children[0].innerHTML;
-    //   stationDes['endTime'] = stationInfo[5].children[0].children[1].innerHTML;
-    // }
-    // console.log(stationDes);
-    // TODO: optimize next statement by rendering stationXML variable in new tab
     var des = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr>' + props.join('\n') + '</table>';
     // var des = '<h1>Station-' + stationID + '</h1> <p>Hi, I am Station ' + stationID + '\nTo know more about me <a href=\'' + describeStationURL + stationID + '\' target=\'_blank\'>click here</a>,\n<p>To get my observations click on the respective links</a>' + '\n<ol>' + props.join('\n')+'</ol>';
     // var des = '<iframe src=\"http://www.ndbc.noaa.gov/widgets/station_page.php?station='+stationID+'\" style=\"border: solid thin #3366ff; width:300px; height:300px\"></iframe>'
@@ -149,15 +139,170 @@ function describeStation(stationXML, stationID, propList) {
 
 var co;
 
-function resetMarkers() {
-  for (i = 0; i < stationCount - 1; i++) {
-    stationArray[i].marker.options.enabled = true;
-    if (!stationGroups.hasLayer(stationArray[i].marker)) {
-      stationGroups.addLayer(stationArray[i].marker);
+function refreshDisplay() {
+  for(var i=0;i<stationCount-1;i++) {
+    if(spatialGroup.hasLayer(stationArray[i].marker) && temporalGroup.hasLayer(stationArray[i].marker) && propGroup.hasLayer(stationArray[i].marker)) {
+      if(!stationGroups.hasLayer(stationArray[i].marker)) {
+        stationGroups.addLayer(stationArray[i].marker);
+      }
+    }else {
+      if(stationGroups.hasLayer(stationArray[i].marker)) {
+        stationGroups.removeLayer(stationArray[i].marker);
+      }
     }
   }
   stationGroups.refreshClusters();
-}
+  //console.log("Station Group", stationGroups)
+  //console.log("Station Array", stationArray)
+};
+
+function refreshChartTable() {
+  var stnReading = [];
+  var sensorId=[]
+  var stnId = []
+  var traces = [];
+  var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0'
+  var selectedVal = $('#chartPropSelect').val();
+    if(selectedVal == 'RESET'){
+      selectedVal = 'sea_floor_depth_below_sea_surface' 
+    }
+    //activeStations: Array to store the current number of stations visible on the map
+    var activeStations = [];
+    stationGroups.eachLayer( function(layer) {
+    if(layer instanceof L.Marker) {
+      if(map.getBounds().contains(layer.getLatLng())) {
+        //console.log(layer.options.stationID)
+        activeStations.push(layer.options.stationID);
+      }
+    }
+    });
+    //console.log("Active Stations", activeStations)
+    for (i=0;i<activeStations.length;i++){
+      obs_url = analytics_url+'&offering=urn:ioos:station:wmo:'+activeStations[i]+'&observedproperty='+selectedVal+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
+      $('#table_data').html("");
+      $.ajax({
+        url: obs_url,
+        datatype: 'text',
+        beforeSend: function() {
+                $('#chartPropSelect').css('background', 'url(https://digitalsynopsis.com/wp-content/uploads/2016/06/loading-animations-preloader-gifs-ui-ux-effects-28.gif) no-repeat center');
+                $(".node_data_table").addClass('load');
+        },
+        success: function(result){
+          //console.log(result)
+          temporalXML = StringToXMLDom(result);
+          //console.log(temporalXML)
+          //Change it for corresponding station by including the station id
+          //var observationTag = result.getElementsByTagName('om:Observation')[2]
+          var observationTag = result.getElementsByTagName('swe2:values')
+          var currStnId = (observationTag[0].innerHTML.split(',')[0]).split('::')[0]
+          var currSensorId = (observationTag[0].innerHTML.split(',')[0]).split('::')[1]
+          //console.log("Obversation Tag", observationTag[0])
+          // var observationList = observationTag.children[5];
+          // console.log(observationList)
+          
+          //console.log(sensorValues.innerHTML.split(',')[1])
+          
+          if (typeof(observationTag[0]) != 'undefined'){
+            //console.log("Obversation Tag", observationTag[0])
+            var sensorValues = observationTag[0].innerHTML.split(',')[1];
+            stnReading.push(sensorValues)
+
+            stnId.push(currStnId)
+            sensorId.push(currSensorId)
+            //console.log((observationTag[0].innerHTML.split(',')[0]).split('::')[0])
+            $('#table_data').append('<tr id=\'row_'+
+              currStnId+'\' onclick=highlightMarker(this)><td>'
+              +currStnId
+              +'</td><td>'+currSensorId
+              +'</td><td>'+sensorValues+'</td></tr>');
+
+          }
+        }
+      });
+    }   
+    
+    //Jquery table access method
+    // $("#dataTable tbody").click(function(){
+    //   //currow denotes the current row
+    //   var currow = $(this).closest('tr')
+    //   console.log("Currow", currow)
+    //   var col = currow.find('td:eq(0)').text();
+    //   console.log("Col", col)
+    //   //value denotes the station Id of the selected row
+    //   var value  = currow.context.firstChild.children[0].innerHTML.split(':')[4]
+    //   for (i=0; i<stationCount-1; i++){
+    //     if (stationArray[i].marker.options.stationID == value){
+    //       console.log("Value", value)
+    //     }
+    //   }
+    // });
+    console.log("Station Id", stnId)
+    console.log("Station Reading", stnReading)     
+    
+    //Update Table values
+    //$('.table_data').append('<tr><td>'+activeStations[i]+'</td><td>'+sensorId[i]+'</td><td>'+sensorValues+'</td></tr>');
+    var trace1 = ({
+        x: stnId,
+        y: stnReading,
+        type: 'lines',
+      });
+    var data = [trace1]
+      //$('.table_data').append('<tr><td>'+stnId+'</td><td>'+sensorId+'</td><td>'+dateTime+'</td><td>'+sensorReading+'</td></tr>');
+    //$(".node_data_table").removeClass('load');
+      
+    var layout = {
+        title: 'Variation of '+obsPropMap[selectedVal]+' With Time',
+        xaxis: {
+          title: 'Timestamp',
+          titlefont: {
+            family: 'Courier New, monospace',
+            size: 8,
+            color: '#000000'
+          }
+        },
+        yaxis: {
+          title: obsPropMap[selectedVal],
+          titlefont: {
+            family: 'Courier New, monospace',
+            size: 8,
+            color: '#000000'
+          }
+        }
+      };
+    
+    Plotly.newPlot('chart', data, layout)
+     console.log("Chart Displayed")
+};  
+
+$('#chartPropSelect').on('change', function() {
+  refreshChartTable()
+});
+
+function highlightMarker(elem) {
+  console.log("Elem", elem)
+  var selRowStnId = elem.children[0].innerHTML.split(':')[4]
+  console.log(selRowStnId)
+  for (i=0; i<stationCount - 1; i++){
+    if (stationArray[i].marker.options.stationID == selRowStnId){
+      console.log(i)
+      console.log(stationArray[i].marker.getLatLng())
+      var iconLatLng = [stationArray[i].marker.getLatLng()];
+      //L.marker([iconLatLng[0].lat, iconLatLng[0].lng], {icon:highlightIcon}).addTo(map).bindPopup("I am Station "+selRowStnId);
+      var markerBounds = L.latLngBounds(iconLatLng);
+      map.fitBounds(markerBounds);
+    }  
+  }
+};
+
+// function resetMarkers() {
+//   for (i = 0; i < stationCount - 1; i++) {
+//     stationArray[i].marker.options.enabled = true;
+//     if (!stationGroups.hasLayer(stationArray[i].marker)) {
+//       stationGroups.addLayer(stationArray[i].marker);
+//     }
+//   }
+//   stationGroups.refreshClusters();
+// }
 
 var bb;
 var drawnItems = new L.FeatureGroup();
@@ -193,23 +338,24 @@ map.on('draw:created', function(e) {
     // });
     bb = layer.getLatLngs();
     var currBb = document.getElementById("bb");
-    // console.log(bb[0]);
-    // currBb.innerHTML = "<br><br>&nbsp;&nbsp;Bounding Box: (Lat, Lon)<br>&nbsp;&nbsp;LL: (" + bb[0][0].lat + ", " + bb[0][0].lng + "),<br>&nbsp;&nbsp;UL: (" + bb[0][1].lat + ", " + bb[0][1].lng + "),<br>&nbsp;&nbsp;UR: (" + bb[0][2].lat + ", " + bb[0][2].lng + "),<br>&nbsp;&nbsp;LR: (" + bb[0][3].lat + ", " + bb[0][3].lng + ")";
     // console.log(bb);
-    for(var i=0;i<stationCount-1;i++) {
+    // Code for Spatial Filter
+    for (var i = 0; i < stationCount - 1; i++) {
       latlong = [stationArray[i].marker.getLatLng()];
-      console.log(latlong[0].lat<bb[0][1].lat, latlong[0].lng>bb[0][1].lng, latlong[0].lat>bb[0][3].lat, latlong[0].lng<bb[0][3].lng)
-      if(!(latlong[0].lat<bb[0][1].lat && latlong[0].lng>bb[0][1].lng && latlong[0].lat>bb[0][3].lat && latlong[0].lng<bb[0][3].lng)) {
-        stationArray[i].marker.options.enabled = false;
-      }else {
-        stationArray[i].marker.options.enabled = true;
-        refreshCharts('spatial', bb)
+      if (!(latlong[0].lat < bb[0][1].lat && latlong[0].lng > bb[0][1].lng && latlong[0].lat > bb[0][3].lat && latlong[0].lng < bb[0][3].lng)) {
+        // stationArray[i].marker.options.enabled = false;
+        spatialGroup.removeLayer(stationArray[i].marker);
+      } else {
+        // stationArray[i].marker.options.enabled = true;
+        spatialGroup.addLayer(stationArray[i].marker);
       }
-      stationGroups.refreshClusters();
     }
+    refreshDisplay();
+    refreshChartTable();
   }
   drawnItems.addLayer(layer);
 });
+
 L.Control.RemoveAll = L.Control.extend({
   options: {
     position: 'topleft'
@@ -218,8 +364,13 @@ L.Control.RemoveAll = L.Control.extend({
     var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
     L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation).addListener(controlDiv, 'click', L.DomEvent.preventDefault).addListener(controlDiv, 'click', function() {
       drawnItems.clearLayers();
-      var currBb = document.getElementById("bb");
-      currBb.innerHTML = "";
+    for(var i=0;i<stationCount-1;i++) {
+      if(!spatialGroup.hasLayer(stationArray[i].marker)) {
+        spatialGroup.addLayer(stationArray[i].marker);
+      }
+    }
+    refreshDisplay();
+    refreshChartTable();
     });
     var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
     controlUI.title = 'Remove All Polygons';
@@ -230,12 +381,31 @@ L.Control.RemoveAll = L.Control.extend({
 var removeAllControl = new L.Control.RemoveAll();
 map.addControl(removeAllControl);
 
+// L.Control.PropChange = L.Control.extend({
+//   options: {
+//     position: 'bottomleft'
+//   },
+//   onAdd: function(map) {
+//     var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
+//     L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation).addListener(controlDiv, 'click', L.DomEvent.preventDefault).addListener(controlDiv, 'click', function() {
+//       drawnItems.clearLayers();
+//       resetMarkers();
+//     });
+//     var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
+//     controlUI.title = 'Remove All Polygons';
+//     controlUI.href = '#';
+//     return controlDiv;
+//   }
+// });
+// var PropChangeFilter = new L.Control.PropChange();
+// map.addControl(PropChangeFilter);
+
 L.Control.TemporalControl = L.Control.extend({
   options: {
     // topright, topleft, bottomleft, bottomright
     position: 'topright',
-    minValue: "",
-    maxValue: "",
+    minDate: "",
+    maxDate: "",
     layer: null,
     range: false,
     min: 0,
@@ -267,19 +437,13 @@ L.Control.TemporalControl = L.Control.extend({
   },
 
   onAdd: function(map) {
-    // happens after added to map
-    // console.log('onadd')
-    // console.log(this.options)
-    // this.options.map = map;
     var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
     $(sliderContainer).append('<div id="leaflet-slider" style="width:200px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:200px; margin-top:10px;background-color:#FFFFFF"></div></div>');
-    //Prevent map panning/zooming while using the slider
     $(sliderContainer).mousedown(function() {
       map.dragging.disable();
     });
     $(document).mouseup(function() {
       map.dragging.enable();
-      //Only show the slider timestamp while using the slider
       $('#slider-timestamp').html('');
     });
 
@@ -287,10 +451,13 @@ L.Control.TemporalControl = L.Control.extend({
   },
 
   onRemove: function(map) {
-    // when removed
-    // add all the markers removed by slider to the stationGroups
-    // console.log('onremove')
-    resetMarkers();
+    for(var i=0;i<stationCount-1;i++) {
+      if(!temporalGroup.hasLayer(stationArray[i].marker)) {
+        temporalGroup.addLayer(stationArray[i].marker);
+      }
+    }
+    refreshDisplay();
+    refreshChartTable();
     $('#leaflet-slider').remove();
   },
 
@@ -301,34 +468,71 @@ L.Control.TemporalControl = L.Control.extend({
       range: _options.range,
       values: [
         0,
-        _options.maxValue.diff(_options.minValue, 'days')
+        _options.maxDate.diff(_options.minDate, 'days')
       ],
       min: _options.min,
       max: _options.max,
-      step:1,
+      step: 1,
+      slide: function(e, ui ) {
+        var low = ui.values[0];
+        var high = ui.values[1];
+        var dateValMin = moment(_options.minDate);
+        var dateValMax = moment(_options.maxDate);
+        var tempMin;
+        var tempMax;
+        // console.log(ui.handleIndex)
+        if(ui.handleIndex) {
+          // console.log('2nd moving')
+          tempMin = moment(dateValMin);
+          tempMax = moment(dateValMax.subtract(_options.max - high, 'days'));
+        }else if((!ui.handleIndex)) {
+          tempMin = moment(dateValMin.add(low, 'days'));
+          tempMax = moment(dateValMax);
+        }
+        // console.log(tempMin.format('LLLL'), tempMax.format('LLLL'));
+        // console.log(low, _options.max - high)
+        $('#slider-timestamp').html('From '+tempMin.format('LLLL')+' To '+tempMax.format('LLLL'));
+      },
       stop: function(e, ui) {
         var map = _options.map;
         var low = ui.values[0];
         var high = ui.values[1];
         // console.log(low, high);
         // console.log(low==_options.min && high==_options.max)
-        if(low==_options.min && high==_options.max){
+        if (low == _options.min && high == _options.max) {
           // console.log('resetting')
-          resetMarkers();
-        }else {
-          var dateValMin = _options.minValue.add(low,'days');
-          var dateValMax = _options.maxValue.subtract(high,'days');
-          // console.log(dateValMin,dateValMax);
-          for (i = 0; i < stationCount - 1; i++) {
-            if (!(stationArray[i].marker.options.beginTime>dateValMin && stationArray[i].marker.options.endTime<dateValMax)) {
-              stationArray[i].marker.options.enabled = false;
-            } else {
-              if (!stationArray[i].marker.options.enabled) {
-                stationArray[i].marker.options.enabled = true;
-              }
+          for(var i=0;i<stationCount-1;i++) {
+            if(!temporalGroup.hasLayer(stationArray[i].marker)) {
+              temporalGroup.addLayer(stationArray[i].marker);
             }
-            stationGroups.refreshClusters();
           }
+          refreshDisplay();
+          refreshChartTable();
+        } else {
+          var dateValMin = moment(_options.minDate);
+          var dateValMax = moment(_options.maxDate);
+          var tempMin;
+          var tempMax;
+          if(low == _options.min) {
+            // console.log('2nd moving')
+            tempMin = moment(dateValMin);
+            tempMax = moment(dateValMax.subtract(_options.max - high, 'days'));
+          }else if(high == _options.max) {
+            tempMin = moment(dateValMin.add(low, 'days'));
+            tempMax = moment(dateValMax);
+          }
+          // console.log(dateValMin.format('LLLL'));
+          // console.log(dateValMax.format('LLLL'));
+          for (i = 0; i < stationCount - 1; i++) {
+            if (!(stationArray[i].marker.options.beginTime > tempMin && stationArray[i].marker.options.endTime < tempMax)) {
+              // stationArray[i].marker.options.enabled = false;
+              temporalGroup.removeLayer(stationArray[i].marker);
+            } else {
+              temporalGroup.addLayer(stationArray[i].marker);
+            }
+          }
+          refreshDisplay();
+          refreshChartTable();
         }
       }
     });
@@ -362,374 +566,29 @@ function propertyFiltering(prop) {
   if (prop != 'RESET') {
     for (i = 0; i < stationCount - 1; i++) {
       if (!isInArray(prop, stationArray[i].marker.options.observedProps)) {
-        stationArray[i].marker.options.enabled = false;
-        stationGroups.refreshClusters();
+        // stationArray[i].marker.options.enabled = false;
+        propGroup.removeLayer(stationArray[i].marker);
       } else {
-        if (!stationArray[i].marker.options.enabled) {
-          stationArray[i].marker.options.enabled = true;
-          stationGroups.refreshClusters();
-        }
+        propGroup.addLayer(stationArray[i].marker);
       }
     }
   } else {
     for (i = 0; i < stationCount - 1; i++) {
-      if (!stationArray[i].marker.options.enabled) {
-        stationArray[i].marker.options.enabled = true;
-      }
+      propGroup.addLayer(stationArray[i].marker);
     }
-    stationGroups.refreshClusters();
   }
+  refreshDisplay();
+  refreshChartTable();
 };
 
 $('#propSelect').on('change', function() {
   propertyFiltering($('#propSelect').val())
 });
 
-//Function for refreshing charts whenever filters are selected
-//$params: behaviour - takes value of temporal, spatial, property, onLoad(for onLoad of website)
-function refreshCharts(behaviour, observedProp){
-  
-  if (behaviour == 'onLoad') {
-      selectedVal = $('#chartPropSelect').val();
-      console.log(selectedVal)
-      if(selectedVal == 'RESET'){
-        //console.log(obsPropMap[observedProp])
-        selectedVal =  'sea_floor_depth_below_sea_surface'
-      }
-      console.log(selectedVal)
-      var currentDate = moment(currentDate).subtract(1, 'days').format('YYYY-MM-DD')
-      console.log(currentDate)
-      var startDate = moment(currentDate).subtract(10, 'days').format('YYYY-MM-DD')
-      console.log(startDate)
-      var appendTime = 'T00:00Z'
-      
-      var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty='+selectedVal+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
-      console.log(analytics_url)
-      
-      $('.table_data').html("");
-      $.ajax({
-        url: analytics_url,
-        datatype: 'text',
-        beforeSend: function() {
-                $('#chartPropSelect').css('background', 'url(https://digitalsynopsis.com/wp-content/uploads/2016/06/loading-animations-preloader-gifs-ui-ux-effects-28.gif) no-repeat center');
-                $(".node_data_table").addClass('load');
-        },
-        success: function(result){
-          //console.log(result)
-          temporalXML = StringToXMLDom(result);
-          //console.log(temporalXML)
-          //Change it for corresponding station by including the station id
-          //var observationTag = result.getElementsByTagName('om:Observation')[2]
-          var observationTag = result.getElementsByTagName('swe2:values')
-          console.log("Obversation Tag", observationTag)
-          // var observationList = observationTag.children[5];
-          // console.log(observationList)
-          // var sensorValues = observationList.children[0].children[2];
-          //console.log(sensorValues)
-          //console.log(sensorValues[0].split(',')[2])
-          numSensors = observationTag.length
-          //console.log(sensorValuesLength)
-          var dateTime = []; 
-          var sensorReading = [];
-          var stnId
-          var sensorId
-          var Id
-
-          var traces = [];
-          for (i=0; i<numSensors-1; i+=2) {
-            sensorValues = observationTag[i].firstChild.data
-            sensorValues = sensorValues.split('\n')
-            console.log(sensorValues)
-            sensorValuesLength = sensorValues.length
-            console.log(sensorValuesLength)
-            for (j=0;j<sensorValuesLength-1;j+=100){
-              console.log(sensorValues[j].split(',')[0], sensorValues[j].split(',')[2])
-              dateTime.push(sensorValues[j].split(',')[0])
-              console.log(dateTime[j])
-              sensorReading.push(sensorValues[j].split(',')[2])
-              console.log(sensorReading[j])
-              Id = sensorValues[j].split(',')[1]
-              console.log("Id", Id)
-              stnId = Id.split(':')[4]
-              console.log("Stn Id", stnId)
-              sensorId = Id.split(':')[6]
-              console.log(sensorId)
-
-              //if()
-              $('.table_data').append('<tr><td>'+stnId+'</td><td>'+sensorId+'</td><td>'+sensorValues[j].split(',')[0]+'</td><td>'+sensorValues[j].split(',')[2]+'</td></tr>');
-            }
-            traces.push({
-              x: dateTime,
-              y: sensorReading,
-              type: 'scatter',
-              mode: 'lines',
-            });
-            //$('.table_data').append('<tr><td>'+stnId+'</td><td>'+sensorId+'</td><td>'+dateTime+'</td><td>'+sensorReading+'</td></tr>');
-          }
-          $(".node_data_table").removeClass('load');
-            
-          //   xAxes.push(sensorValues[i].split(',')[0]);
-          //   console.log(xAxes)
-          //   yAxes.push(sensorValues[i].split(',')[2]);
-          //   console.log(yAxes)
-          // }  
-          // var trace1 = {
-          //  x: xAxes,
-          //  y: yAxes,
-          //  type: 'lines'
-          // };
-         //var data = [trace1];
-         var layout = {
-            title: 'Variation of '+obsPropMap[observedProp]+' With Time',
-            xaxis: {
-              title: 'Timestamp',
-              titlefont: {
-                family: 'Courier New, monospace',
-                size: 12,
-                color: '#000000'
-              }
-            },
-            yaxis: {
-              title: obsPropMap[observedProp],
-              titlefont: {
-                family: 'Courier New, monospace',
-                size: 12,
-                color: '#000000'
-              }
-            }
-          }
-         Plotly.newPlot('chart', {
-          data:traces,
-           layout: layout,
-          });
-         console.log("Chart Displayed")
-        }
-      });
-  } 
-  // Refresh charts after Spatial Filtering
-  if (behaviour == 'spatial') {
-    selectedVal = $('#chartPropSelect').val();
-    if(selectedVal == 'RESET'){
-        selectedVal = 'sea_floor_depth_below_sea_surface' 
-    }
-    bbox = observedProp[0][1].lng+','+observedProp[0][3].lat+','+observedProp[0][3].lng+','+observedProp[0][1].lat
-    var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&featureofinterest=BBOX:'+bbox+'&observedproperty='+selectedVal+'&responseformat=text/xml;subtype=%22om/1.0.0%22'
-    console.log(analytics_url)
-
-    $.ajax({
-      url: analytics_url,
-      datatype: 'text',
-      success: function(result){
-        //console.log(result)
-        temporalXML = StringToXMLDom(result);
-        //console.log(temporalXML)
-        //Change it for corresponding station by including the station id
-        var observationTag = result.getElementsByTagName('om:Observation')[0]
-        console.log(observationTag)
-        var observationList = observationTag.children[5];
-        console.log(observationList)
-        var sensorValues = observationList.children[0].children[2];
-        sensorValues = sensorValues.innerHTML.split('\n')
-        //console.log(sensorValues[0])
-        //console.log(sensorValues[0].split(',')[2])
-        sensorValuesLength = sensorValues.length
-        //console.log(sensorValuesLength)
-        var xAxes = []; 
-        var yAxes = [];
-        for (i=0; i<sensorValuesLength-1; i++) {
-          
-          xAxes.push(sensorValues[i].split(',')[0]);
-          console.log(xAxes)
-          yAxes.push(sensorValues[i].split(',')[2]);
-          console.log(yAxes)
-        }  
-        var trace1 = {
-         x: xAxes,
-         y: yAxes,
-         type: 'lines'
-        };
-       var data = [trace1];
-       var layout = {
-            title: 'Variation of '+obsPropMap[selectedVal]+' With Time',
-            xaxis: {
-              title: 'Timestamp',
-              titlefont: {
-                family: 'Courier New, monospace',
-                size: 12,
-                color: '#000000'
-              }
-            },
-            yaxis: {
-              title: obsPropMap[observedProp],
-              titlefont: {
-                family: 'Courier New, monospace',
-                size: 12,
-                color: '#000000'
-              }
-            }
-          }
-       Plotly.newPlot('chart', data, layout);
-       console.log("Chart Displayed")
-      }
-    });
-  }
-
-  // Refresh charts after Spatial Filtering
-  if (behaviour == 'initialChange') {
-    var filterSelect = $('#propSelect').val()
-    if(filterSelect == 'Spatial'){
-      console.log("I am in spatial and value of chartProp has changed")
-      refreshCharts('spatial', bb)
-    }
-    selectedVal = $('#chartPropSelect').val();
-        if(selectedVal == 'RESET'){
-            selectedVal = 'sea_floor_depth_below_sea_surface' 
-        }
-        var currentDate = moment(currentDate).subtract(1, 'days').format('YYYY-MM-DD')
-        console.log(currentDate)
-        var startDate = moment(currentDate).subtract(10, 'days').format('YYYY-MM-DD')
-        console.log(startDate)
-        var appendTime = 'T00:00Z'
-        var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty='+selectedVal+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime='+startDate+appendTime+'/'+currentDate+appendTime
-        console.log(analytics_url)
-
-        $.ajax({
-          url: analytics_url,
-          datatype: 'text',
-          success: function(result){
-            //console.log(result)
-            temporalXML = StringToXMLDom(result);
-            //console.log(temporalXML)
-            //Change it for corresponding station by including the station id
-            var observationTag = result.getElementsByTagName('om:Observation')[0]
-            console.log(observationTag)
-            var observationList = observationTag.children[5];
-            console.log(observationList)
-            var sensorValues = observationList.children[0].children[2];
-            sensorValues = sensorValues.innerHTML.split('\n')
-            //console.log(sensorValues[0])
-            //console.log(sensorValues[0].split(',')[2])
-            sensorValuesLength = sensorValues.length
-            //console.log(sensorValuesLength)
-            var xAxes = []; 
-            var yAxes = [];
-            for (i=0; i<sensorValuesLength-1; i++) {
-              
-              xAxes.push(sensorValues[i].split(',')[0]);
-              console.log(xAxes)
-              yAxes.push(sensorValues[i].split(',')[2]);
-              console.log(yAxes)
-            }  
-            var trace1 = {
-             x: xAxes,
-             y: yAxes,
-             type: 'lines'
-            };
-           var data = [trace1];
-           var layout = {
-                title: 'Variation of '+obsPropMap[selectedVal]+' With Time',
-                xaxis: {
-                  title: 'Timestamp',
-                  titlefont: {
-                    family: 'Courier New, monospace',
-                    size: 12,
-                    color: '#000000'
-                  }
-                },
-                yaxis: {
-                  title: obsPropMap[observedProp],
-                  titlefont: {
-                    family: 'Courier New, monospace',
-                    size: 12,
-                    color: '#000000'
-                  }
-                }
-              }
-           Plotly.newPlot('chart', data, layout);
-           console.log("Chart Displayed")
-          }
-        });
-    } 
-}
-
-$('#chartPropSelect').on('change', function() {
-  refreshCharts('initialChange',$('#chartPropSelect').val())
-});
-
-//Function to display the sensor readings using plotly and temporal subsetting
-function displayAnalytics(observedProp) {
-  //console.log(stationID)
-  //console.log(observedProp)
-  //var currentDate = moment().format('YYYY-MM-DD')
-  var currentDate = moment(currentDate).subtract(1, 'days').format('YYYY-MM-DD')
-  console.log(currentDate)
-  var startDate = moment(currentDate).subtract(10, 'days').format('YYYY-MM-DD')
-  console.log(startDate)
-  var appendTime = 'T00:00Z'
-  //var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty=air_pressure_at_sea_level&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=2018-04-13T00:00Z/2018-04-15T00:00Z'
-  //var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty=air_pressure_at_sea_level&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
-  var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:network:noaa.nws.ndbc:all&observedproperty='+observedProp+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime='+startDate+appendTime+'/'+currentDate+appendTime
-  console.log(analytics_url)
-//   var trace1 = {
-//   x: [1, 2, 3, 4], 
-//   y: [10, 15, 13, 17], 
-//   type: 'lines'
-// };
-// var trace2 = {
-//   x: [1, 2, 3, 4], 
-//   y: [16, 5, 11, 9], 
-//   type: 'lines'
-// };
-// var data = [trace1, trace2];
-// Plotly.newPlot('charts', data);
-$.ajax({
-  url: analytics_url,
-  datatype: 'text',
-  success: function(result){
-    //console.log(result)
-    temporalXML = StringToXMLDom(result);
-    //console.log(temporalXML)
-    //Change it for corresponding station by including the station id
-    var observationTag = result.getElementsByTagName('om:Observation')[0]
-    //console.log(observationTag)
-    var observationList = observationTag.children[5];
-    //console.log(observationList)
-    var sensorValues = observationList.children[0].children[2];
-    sensorValues = sensorValues.innerHTML.split('\n')
-    //console.log(sensorValues[0])
-    //console.log(sensorValues[0].split(',')[2])
-    sensorValuesLength = sensorValues.length
-    //console.log(sensorValuesLength)
-    var xAxes = []; 
-    var yAxes = [];
-    for (i=0; i<sensorValuesLength-1; i++) {
-      
-      xAxes.push(sensorValues[i].split(',')[0]);
-      console.log(xAxes)
-      yAxes.push(sensorValues[i].split(',')[2]);
-      console.log(yAxes)
-    }  
-
-    var trace1 = {
-     x: xAxes,
-     y: yAxes,
-     type: 'lines'
-    };
-   var data = [trace1];
-   Plotly.newPlot('chart', data);
-   console.log("Chart Displayed")
-  }
-
-});
-}
-
-
 $.ajax({
   url: ndbc_sos,
   dataType: 'text',
   success: function(result) {
-    // Refreshing charts on initial load
-    refreshCharts('onLoad', 'sea_floor_depth_below_sea_surface')
     // console.log(result);
     GetCapabilitiesXML = StringToXMLDom(result);
 
@@ -783,55 +642,30 @@ $.ajax({
 
       })
       stationArray.push({
-        marker: stationMarker,
-        id: i - 1,
-        detail: stationHTML
+        marker: stationMarker
       });
-      stationGroups.addLayer(stationMarker);
+      spatialGroup.addLayer(stationMarker);
+      temporalGroup.addLayer(stationMarker);
+      propGroup.addLayer(stationMarker);
+      // stationGroups.addLayer(stationMarker);
     }
     maxDate = moment();
-
-    // console.log(minDate, maxDate);
-
-    // console.log('adding to layer')
+    // console.log(maxDate);
+    // console.log(maxDate);
+    // console.log(minDate.format('LLLL'), maxDate.format('LLLL'))
     map.addLayer(stationGroups);
-    //Code for gauges onWebsiteLoad
-    google.charts.load('current', {packages: ['gauge']});
-    google.charts.setOnLoadCallback(function() {
-      var data = google.visualization.arrayToDataTable([
-        ['Label', 'Value'],
-        ['Sea Floor Depth Below Sea Surface', 80],
-        ['Air Pressure At Sea Level', 55],
-        ['Sea Water Temperature', 68],
-        ['Sea Water Salinity', 28],
-        ['Air Temperature', 38],
-        ['Currents', 98],
-        ['Waves', 18],
-        ['Winds', 78]
-      ]);
-      console.log(stationArray[0]);
-
-      var options = {
-        width: 400, height: 120,
-        redFrom: 90, redTo: 100,
-        yellowFrom:75, yellowTo: 90,
-        minorTicks: 5
-      };
-
-      var chart = new google.visualization.Gauge(document.getElementById('gauges'));
-
-      chart.draw(data, options);
-    })
+    refreshDisplay();
+    refreshChartTable();
 
     L.control.temporalController = function(id, options) {
       return new L.Control.TemporalControl(id, options);
     }
-
+    // console.log(maxDate.diff(minDate, 'days'), minDate.add(maxDate.diff(minDate, 'days'), 'days').format('LLLL'), maxDate.subtract(maxDate.diff(minDate, 'days'), 'days').format('LLLL'));
     var sliderControl = L.control.temporalController({
       // topright, topleft, bottomleft, bottomright
       position: 'topright',
-      minValue: minDate,
-      maxValue: maxDate,
+      minDate: moment(minDate),
+      maxDate: moment(maxDate),
       layer: OSMLayer,
       range: true,
       min: 0,
