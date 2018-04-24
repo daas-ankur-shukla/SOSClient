@@ -67,7 +67,28 @@ const obsPropMap = {
   'air_temperature': 'Air Temperature',
   'currents': 'Currents',
   'waves': 'Waves',
-  'winds': 'Winds'
+  'winds': 'Winds',
+  'sea_surface_wave_significant_height': 'Sea Surface Wave Significant Height',
+  'sea_surface_wave_peak_period': 'Sea Surface Wave Peak Period',
+  'sea_surface_wave_mean_period': 'Sea Surface Wave Mean Period',
+  'sea_surface_swell_wave_significant_height': 'Sea Surface Swell Wave Significant Height',
+  'sea_surface_swell_wave_period': 'Sea Surface Swell Wave Period',
+  'sea_surface_wind_wave_significant_height': 'Sea Surface Wind Wave Significant Height',
+  'sea_surface_wind_wave_period': 'Sea Surface Wind Wave Period',
+  'sea_water_temperature': 'Sea Water Temperature',
+  'sea_surface_wave_to_direction': 'Sea Surface Wave To Direction',
+  'sea_surface_swell_wave_to_direction': 'Sea Surface Swell Wave To Direction',
+  'sea_surface_wind_wave_to_direction': 'Sea Surface Wind Wave To Direction',
+  'center_frequency': 'Center Frequency',
+  'bandwidth': 'Bandwidth',
+  'spectral_energy': 'Spectral Energy',
+  'mean_wave_direction': 'Mean Wave Direction',
+  'principal_wave_direction': 'Principal Wave Direcion',
+  'polar_coordinate_r1': 'Polar Coordinate R1',
+  'polar_coordinate_r2': 'Polar Coordinate R2',
+  'wind_from_direction': 'Wind From Direction',
+  'wind_speed': 'Wind Speed',
+  'wind_speed_of_gust': 'Wind Speed Of Gust'
 }
 
 function isInArray(value, array) {
@@ -102,7 +123,8 @@ map.on('popupclose', function(e) {
 
 function getObservationURL(id, property) {
   // console.log(property)
-  return 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:' + id + '&observedproperty=' + property + '&responseformat=text/xml;subtype=\"om/1.0.0\"&eventtime=latest';
+  var temp = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:' + id + '&observedproperty=' + property;
+  return temp.toString();
 }
 
 function StringToXMLDom(string) {
@@ -173,18 +195,48 @@ function getProperties(observedProps) {
 // }
 
 function describeStation(stationXML, stationID, propList, popup) {
-  var popupContent = '<table style=\'width:100%\' border=\'0\'><tr><td><h1 style=\'font-size=50%;margin-top:0.5em;\'>NDBC</h1></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' align=\'right\'/></td></tr><tr><td colspan=\'2\'><h1>Station-' + stationID + '</h1></td></tr></table>\n<ul>\n'
+  // var popupContent = '<table style=\'width:100%\' border=\'0\'><tr><td><a style=\'font-size=50%;margin-top:0.5em;\'>NDBC Station '+stationID+'</a></td><td><img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' class=\"right-align\"/></td></tr></table>\n<ul class=\"collapsible\">\n'
+  var popupContent = '<img src=\'./images/ndbc_logo.png\' width=\'40\' height=\'40\' class=\"left-align\"/><h5 style=\"display:inline\" class="left-align">   NDBC Station '+stationID+'</h5>\n<ul class=\"collapsible\">\n'
+  // var popupContent = '<div class="col s12 m8 offset-m2 l6 offset-l3"><div class="card-panel grey lighten-5 z-depth-1"><div class="row valign-wrapper"><div class="col s2"><img src="images/ndbc_logo.png" alt="" class="circle responsive-img"></div><div class="col s10"><span class="black-text">NDBC Station '+stationID+'</span></div></div></div></div><div><ul class=\"collapsible\">\n'
   temp = ''
   for (var i = 0; i < propList.length; i++) {
       // console.log(i, propList.length);
       observationURL = getObservationURL(stationID, propList[i]);
-      console.log(observationURL);
-      temp = temp + '<li>\n<div data-url=\"' + observationURL +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/>  ' + obsPropMap[propList[i]] + '</div>\n</li>\n<li>\n<div>'
+      // console.log(observationURL);
+      temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL.toString() +'\"><img src=\'/images/'+ propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/><span>' + obsPropMap[propList[i]] + '</span></div>\n<div class="collapsible-body"></div></li>\n<li>\n<div>'
   }
-  popupContent = popupContent+temp;
-  console.log(popupContent);
+  popupContent = popupContent+temp+'</div>';
+  // console.log(popupContent);
   popup.setContent(popupContent);
   popup.update();
+  $('.collapsible').collapsible({
+    accordion: true,
+    onOpenStart: function(el){
+        //$('li.roles_icon', this).html('remove');
+        var obsURL = el.children[0].attributes[1].nodeValue + '&responseformat=text/xml;subtype="om/1.0.0"&eventtime=latest'.toString();
+        // var span = el.children[1].
+        console.log(obsURL);
+            $.get(obsURL).done(function(data) {
+              console.log(data);
+              subProps = data.getElementsByTagName('swe:CompositePhenomenon')[0].children;
+              subPropVals = data.getElementsByTagName('swe2:DataStream')[0].children[2].innerHTML.split(',');
+              console.log(subProps, subPropVals);
+              temp = '';
+              for(var j=1;j<subProps.length;j++) {
+                console.log(subProps[j].attributes[0].nodeValue.split('/').pop());
+                temp = temp + '<p>' + obsPropMap[subProps[j].attributes[0].nodeValue.split('/').pop()] + ': ' + subPropVals[j] + '</p>';
+              }
+              console.log(temp)
+              $('.collapsible-body').html('<span>'+temp+'</span>');
+            });
+    },
+    onCloseStart:function(el){
+        //switch back icon to normal
+        // console.log(el);
+        $('.collapsible-body').html('');
+    }
+
+});
 }
 
 function refreshDisplay() {
@@ -396,7 +448,7 @@ L.Control.TemporalControl = L.Control.extend({
         }
         // console.log(tempMin.format('LLLL'), tempMax.format('LLLL'));
         // console.log(low, _options.max - high)
-        $('#slider-timestamp').html('From ' + tempMin.format('LLLL') + ' To ' + tempMax.format('LLLL'));
+        $('#slider-timestamp').html('<blockquote>From ' + tempMin.format('LLLL') + ' To ' + tempMax.format('LLLL') + '</blockquote>');
       },
       stop: function(e, ui) {
         var map = _options.map;
@@ -483,7 +535,19 @@ function propertyFiltering(prop) {
   refreshDisplay();
 };
 
+var propSelectorControl = L.control({position: 'bottomleft'});
+propSelectorControl.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info legend');
+    div.innerHTML = '<select id="propSelect"><option value="RESET" class="waves-effect waves-light" selected>All Properties</option><option value="sea_floor_depth_below_sea_surface" class="waves-effect waves-light">Sea Floor Depth Below Sea Surface</option><option value="air_pressure_at_sea_level" class="waves-effect waves-light">Air Pressure At Sea Level</option><option value="sea_water_temperature" class="waves-effect waves-light">Sea Water Temperature</option><option value="sea_water_salinity" class="waves-effect waves-light">Sea Water Salinity</option><option value="air_temperature" class="waves-effect waves-light">Air Temperature</option><option value="waves">Waves</option><option value="winds">Winds</option></select>';
+    div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
+    return div;
+};
+propSelectorControl.addTo(map);
+
+
+$('select').formSelect();
 $('#propSelect').on('change', function() {
+  // console.log($('#propSelect').val());
   propertyFiltering($('#propSelect').val())
 });
 
@@ -524,7 +588,7 @@ $.ajax({
       if (minDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML) < minDate)
         minDate = moment(observationOfferingList[i].getElementsByTagName("gml:beginPosition")[0].innerHTML)
         // if(maxDate == '' || moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)>minDate) minDate = moment(observationOfferingList[i].getElementsByTagName("gml:endPosition")[0].innerHTML)
-      const popupHeading = '<p>Please wait, I am looking for my SensorML</p>'
+      const popupHeading = '<p>Please wait, I am looking for my SensorML</p><div class="progress"><div class="indeterminate"></div></div>'
       stationMarker.bindPopup(popupHeading);
       stationMarker.on('click', function(e) {
         // console.log(e.target.options.beginTime, e.target.options.endTime);
