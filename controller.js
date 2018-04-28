@@ -238,8 +238,8 @@ function describeStation(stationXML, stationID, propList, popup) {
           }
         }
         // console.log(gaugeArray);
-        // console.log(!isNaN(gaugeArray[1]), gaugeArray[1]!='');
-        if (!isNaN(gaugeArray[1]) && gaugeArray[1] != '') {
+        // console.log(gaugeArray[1]==0, !isNaN(gaugeArray[1]), gaugeArray[1]!='');
+        if (gaugeArray[1]==0 || (!isNaN(gaugeArray[1]) && gaugeArray[1] != '')) {
           var toastHTML = '<div><p style="color:black;">' + displaySubProp + '</p></div><div><canvas id="gauge"></canvas></div>';
           M.toast({html: toastHTML, classes: 'rounded, white'});
           var targetCanvas = document.getElementById('gauge');
@@ -503,6 +503,7 @@ function propertyFiltering(prop) {
     }
   } else {
     for (i = 0; i < stationCount - 1; i++) {
+      if(!propGroup.hasLayer(stationArray[i].marker))
       propGroup.addLayer(stationArray[i].marker);
     }
   }
