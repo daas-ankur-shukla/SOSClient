@@ -206,7 +206,7 @@ function describeStation(stationXML, stationID, propList, popup) {
   temp = ''
   for (var i = 0; i < propList.length; i++) {
     observationURL = getObservationURL(stationID, propList[i]);
-    temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL.toString() + '\"><img src=\'https://github.com/daas-ankur-shukla/SOSClient/blob/master/images/' + propList[i] + '.png\' width=\'30\' height=\'30\' align=\'left\'/><span>' + obsPropMap[propList[i]] + '</span></div>\n<div class="collapsible-body"></div></li>\n<li>\n<div>'
+    temp = temp + '<li>\n<div class=\"collapsible-header hoverable\" data-url=\"' + observationURL.toString() + '\"><img src=\'https://github.com/daas-ankur-shukla/SOSClient/blob/master/images/' + propList[i] + '.png?raw=true\' width=\'30\' height=\'30\' align=\'left\'/><span>' + obsPropMap[propList[i]] + '</span></div>\n<div class="collapsible-body"></div></li>\n<li>\n<div>'
   }
   popupContent = popupContent + temp + '</div>';
   popup.setContent(popupContent);
