@@ -252,6 +252,7 @@ function refreshChartTable() {
       
     var layout = {
         title: 'Variation of '+obsPropMap[selectedVal]+' With Time',
+        autoSize:'False', 
         xaxis: {
           title: 'Timestamp',
           titlefont: {
@@ -271,6 +272,11 @@ function refreshChartTable() {
       };
     
     Plotly.newPlot('chart', data, layout)
+    //$.plot($("#chart"), [[stnId],[stnReading]], { yaxis: { max: 1 } });
+    // d1 = [stnId, stnReading]
+    // $.plot("#chart", [{
+    //   data: d1,
+    //   lines: { show: true, fill: true }}, ]);
      console.log("Chart Displayed")
 };  
 
