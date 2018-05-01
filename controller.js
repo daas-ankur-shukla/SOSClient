@@ -8,6 +8,7 @@ var markerJSON
 var stationCount
 var stationArray = [];
 
+var boundedStations = L.markerClusterGroup();
 var spatialGroup = L.markerClusterGroup();
 var temporalGroup = L.markerClusterGroup();
 var propGroup = L.markerClusterGroup();
@@ -317,17 +318,20 @@ function refreshChartTable() {
   if (selectedVal == 'RESET') {
     selectedVal = 'sea_floor_depth_below_sea_surface'
   }
-  //activeStations: Array to store the current number of stations visible on the map
-  var activeStations = [];
+  //boundedStations: Array to store the current number of stations visible on the map
+
   bounds = map.getBounds();
   stationGroups.eachLayer(function(layer) {
     if (bounds.contains(layer.getLatLng())) {
-        //console.log(layer.options.stationID)
-        activeStations.push(layer.options.stationID);
-      }
+      //console.log(layer.options.stationID)
+      boundedStations.addLayer(layer);
+    } else {
+      boundedStations.removeLayer(layer);
+    }
   });
-  for (var i = 0; i < activeStations.length; i++) {
-    obs_url = analytics_url + '&offering=urn:ioos:station:wmo:' + activeStations[i] + '&observedproperty=' + selectedVal + '&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
+  // for (var i = 0; i < boundedStations.length; i++) {
+  boundedStations.eachLayer(function(layer) {
+    obs_url = analytics_url + '&offering=urn:ioos:station:wmo:' + layer.options.stationID + '&observedproperty=' + selectedVal + '&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
     $('#table_data').html("");
     $.ajax({
       url: obs_url,
@@ -354,7 +358,7 @@ function refreshChartTable() {
         }
       }
     });
-  }
+  });
 
   // console.log("Station Id", stnId)
   // console.log("Station Reading", stnReading)
@@ -736,7 +740,6 @@ $.ajax({
     sliderControl.startSlider();
     refreshDisplay();
     refreshChartTable();
-    
     map.on("moveend zoomend", refreshChartTable);
   },
   error: function(xhr, staus, error) {
