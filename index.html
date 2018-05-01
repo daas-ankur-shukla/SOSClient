@@ -2,112 +2,64 @@
 <html lang="en">
 
 <head>
-    <!-- Bootstrap Core CSS -->
-    <link href="./bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.3.0/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.3.0/dist/MarkerCluster.Default.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
-    <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/leaflet.draw.css" />
+  <link rel="stylesheet" type="text/css" href="css/popup.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.2/leaflet.draw.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.2/leaflet.draw.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.22.1/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gauge.js/1.3.6/gauge.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.3.0/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.3.0/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.3.0/dist/leaflet.markercluster.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
-    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment@2.22.1/moment.min.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.3.0/dist/leaflet.markercluster.js"></script>
-    <script src="gauge.js"></script>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
+  <title>SOSClient</title>
 
-
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <title>SOSClient</title>
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
-<style>
-body {font-family: Arial;}
-
-/* Styling for Map*/
-#map {
-      width: 600px;
-      height: 500px;
-    }
-/* css to customize Leaflet default styles  */
-
-.customPopup .leaflet-popup-tip,
-.customPopup .leaflet-popup-content-wrapper {
-      background: #ffffff;
-      color: #000000;
+  <style>
+    div{
+      display:inline-block;
+      padding:0px;
+      margin:0px;
+  }
+    tbody {
+      display: block;
+      height: 150px;
+      overflow: auto;
     }
 
-/* Style the tab */
-.tab {
-    overflow: hidden;
-    border: 1px solid #ccc;
-    background-color: #f1f1f1;
-}
+    thead,
+    tbody tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
 
-/* Style the buttons inside the tab */
-.tab button {
-    background-color: inherit;
-    float: left;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 10px 10px;
-    transition: 0.3s;
-    font-size: 10px;
-}
+    thead {
+      width: calc( 100% - 1em)
+    }
 
-/* Change background color of buttons on hover */
-.tab button:hover {
-    background-color: #ddd;
-}
-
-/* Create an active/current tablink class */
-.tab button.active {
-    background-color: #ccc;
-}
-
-/* Style the tab content */
-.tabcontent {
-    display: none;
-    padding: 6px 12px;
-    border: 1px solid #ccc;
-    border-top: none;
-}
-
-#filterControl {
-    padding: 8px 8px;
-    font-size: 10px; 
-}
-
-#chart {
-    width: auto;
-    height: 350px;
-
-}
-
-</style>
+    table {
+      width: 100%;
+    }
+  </style>
 </head>
 
 <body>
@@ -135,96 +87,30 @@ body {font-family: Arial;}
   <script src="https://unpkg.com/leaflet.markercluster@1.3.0/dist/leaflet.markercluster.js"></script>
   <div class="row">
     <div class="col s12">
-      <h1 class="center-align">SOS Client for NDBC</h1></div>
-  </div>
-  <div class="row">
-    <div id="map" class="col s6 custom-popup"></div>
-    <!-- <div id="gauges" class="col s2">
-      <canvas id='he'></canvas>
-    </div> -->
-    <!-- 2nd row: tables -->
-    <div class="col s6" >
-                    <table class="table highlight" id="dataTable">
-                      <thead>
-                        <tr>
-                          <th>Stn Id</th>
-                          <th>Sensor Id</th>
-                          <th>Reading</th>
-                        </tr>
-                      </thead>
-                      <tbody id="table_data">
-
-                      </tbody>
-                    </table>
-                </div>
-            <br>
-            <div class="panel-heading col s6">
-                            <select id="chartPropSelect" >
-                                <option value="RESET" selected>All Properties</option>
-                                <option value="sea_floor_depth_below_sea_surface">Sea Floor Depth Below Sea Surface</option>
-                                <option value="air_pressure_at_sea_level">Air Pressure At Sea Level</option>
-                                <option value="sea_water_temperature">Sea Water Temperature</option>
-                                <option value="sea_water_salinity">Sea Water Salinity</option>
-                                <option value="air_temperature">Air Temperature</option>
-                                <option value="waves">Currents</option>
-                                <option value="waves">Waves</option>
-                                <option value="winds">Winds</option>
-                            </select>
-                        </div>
-                        <!-- /.panel-heading -->
-                        <div id="chart">
-                            <!--<div id="chart" width="200px" height="200px"></div> -->
-                        </div>
-                        <!-- /.panel-body -->
-                    </div>
-                <div class="col-md-1"></div>
-            </div>
-
+      <h1 class="center-align">SOS Client for NDBC</h1>
     </div>
   </div>
   <div class="row">
-    <div class="col s4 m8 offset-m2 l4">
-        <div class="card-panel grey lighten-5 z-depth-1">
-          <div class="row valign-wrapper">
-            <div class="col s2">
-              <img href="https://github.com/omshinde" src="https://github.com/daas-ankur-shukla/SOSClient/blob/master/images/rajat.jpg" alt="" class="circle responsive-img" width='30' height='30'> <!-- notice the "circle" class -->
-            </div>
-            <div class="col s10">
-              <span class="black-text">
-                Rajat Shinde
-              </span>
-            </div>
-          </div>
-        </div>
+    <div id="map" class="col s6 custom-popup"></div>
+    <di v class="col s6">
+      <div class="row">
+        <table class="table highlight responsive-table scrollable" id="dataTable">
+          <thead>
+            <tr>
+              <th>Station ID</th>
+              <th>Sensor ID</th>
+              <th>Reading</th>
+            </tr>
+          </thead>
+          <tbody id="table_data">
+          </tbody>
+        </table>
       </div>
-      <div class="col s4 m8 offset-m2 l4">
-          <div class="card-panel grey lighten-5 z-depth-1">
-            <div class="row valign-wrapper">
-              <div class="col s2">
-                <img href="https://github.com/daas-ankur-shukla" src="https://github.com/daas-ankur-shukla/SOSClient/blob/master/images/ankur.jpg" alt="" class="circle responsive-img" width='30' height='30'> <!-- notice the "circle" class -->
-              </div>
-              <div class="col s10">
-                <span class="black-text">
-                  Ankur Shukla
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col s4 m8 offset-m2 l4">
-            <div class="card-panel grey lighten-5 z-depth-1">
-              <div class="row valign-wrapper">
-                <div class="col s2">
-                  <img href="https://github.com/pan111" src="https://github.com/daas-ankur-shukla/SOSClient/blob/master/images/pankaj.png" alt="" class="circle responsive-img" width='30' height='30'> <!-- notice the "circle" class -->
-                </div>
-                <div class="col s10">
-                  <span class="black-text">
-                    Pankaj Tarone
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div id="chart">
+      </div>
+    </div>
+  </div>
+  </div>
   </div>
   <script src="controller.js"></script>
 </body>

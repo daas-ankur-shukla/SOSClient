@@ -126,7 +126,8 @@ const subPropArray = [
   'sea_water_speed',
   'sea_surface_wind_wave_significant_height',
   'wind_speed'
-]
+];
+
 const subPropRange = {
   'sea_floor_depth_below_sea_surface': [
     0, 10994, 'Meters'
@@ -150,10 +151,21 @@ const subPropRange = {
     0, 20.1, 'Meters'
   ],
   'wind_speed': [0, 54, 'km/h']
-}
+};
+
+const sensorTypeMap = {
+  'tsunameter0': 'Tsunameter',
+  'baro1': 'Barometer',
+  'watertemp1': 'Water Temperature',
+  'airtemp1': 'Air Temperature',
+  'anemometer1': 'Anemometer',
+  'anemometer2': 'Anemometer',
+  'wpm1': 'WPM'
+};
+
 function isInArray(value, array) {
   return array.indexOf(value) > -1;
-}
+};
 
 var stationMarker
 var map = L.map('map', {minZoom: 1}).setView([
@@ -239,7 +251,7 @@ function describeStation(stationXML, stationID, propList, popup) {
         }
         // console.log(gaugeArray);
         // console.log(gaugeArray[1]==0, !isNaN(gaugeArray[1]), gaugeArray[1]!='');
-        if (gaugeArray[1]==0 || (!isNaN(gaugeArray[1]) && gaugeArray[1] != '')) {
+        if (gaugeArray[1] == 0 || (!isNaN(gaugeArray[1]) && gaugeArray[1] != '')) {
           var toastHTML = '<div><p style="color:black;">' + displaySubProp + '</p></div><div><canvas id="gauge"></canvas></div>';
           M.toast({html: toastHTML, classes: 'rounded, white'});
           var targetCanvas = document.getElementById('gauge');
@@ -265,7 +277,7 @@ function describeStation(stationXML, stationID, propList, popup) {
 }
 
 function refreshDisplay() {
-for (var i = 0; i < stationCount - 1; i++) {
+  for (var i = 0; i < stationCount - 1; i++) {
     if (spatialGroup.hasLayer(stationArray[i].marker) && temporalGroup.hasLayer(stationArray[i].marker) && propGroup.hasLayer(stationArray[i].marker)) {
       if (!stationGroups.hasLayer(stationArray[i].marker)) {
         stationGroups.addLayer(stationArray[i].marker);
@@ -282,149 +294,105 @@ for (var i = 0; i < stationCount - 1; i++) {
   //console.log("Station Array", stationArray)
 };
 
+
+function highlightMarker(elem) {
+  var selRowStnId = elem.children[0].innerHTML;
+  var zoom = 5;
+  for (i = 0; i < stationCount - 1; i++) {
+    if (stationArray[i].marker.options.stationID == selRowStnId) {
+      var iconLatLng = [stationArray[i].marker.getLatLng()];
+      map.flyTo([iconLatLng[0].lat, iconLatLng[0].lng], zoom);
+      // stationArray[i].marker.openPopup();
+    }
+  }
+};
+
 function refreshChartTable() {
   var stnReading = [];
-  var sensorId=[]
+  var sensorId = []
   var stnId = []
   var traces = [];
   var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0'
-  var selectedVal = $('#chartPropSelect').val();
-    if(selectedVal == 'RESET'){
-      selectedVal = 'sea_floor_depth_below_sea_surface' 
-    }
-    //activeStations: Array to store the current number of stations visible on the map
-    var activeStations = [];
-    stationGroups.eachLayer( function(layer) {
-    if(layer instanceof L.Marker) {
-      if(map.getBounds().contains(layer.getLatLng())) {
+  var selectedVal = $('#propSelect').val();
+  if (selectedVal == 'RESET') {
+    selectedVal = 'sea_floor_depth_below_sea_surface'
+  }
+  //activeStations: Array to store the current number of stations visible on the map
+  var activeStations = [];
+  bounds = map.getBounds();
+  stationGroups.eachLayer(function(layer) {
+    if (bounds.contains(layer.getLatLng())) {
         //console.log(layer.options.stationID)
         activeStations.push(layer.options.stationID);
       }
-    }
+  });
+  for (var i = 0; i < activeStations.length; i++) {
+    obs_url = analytics_url + '&offering=urn:ioos:station:wmo:' + activeStations[i] + '&observedproperty=' + selectedVal + '&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
+    $('#table_data').html("");
+    $.ajax({
+      url: obs_url,
+      datatype: 'text',
+      beforeSend: function() {
+        $('#propSelect').css('background', 'url(https://digitalsynopsis.com/wp-content/uploads/2016/06/loading-animations-preloader-gifs-ui-ux-effects-28.gif) no-repeat center');
+        $(".node_data_table").addClass('load');
+      },
+      success: function(result) {
+        temporalXML = StringToXMLDom(result);
+        var observationTag = result.getElementsByTagName('swe2:values')
+
+        if (typeof(observationTag[0]) != 'undefined') {
+          var currStnId = (observationTag[0].innerHTML.split(',')[0]).split('::')[0].split(':').pop();
+          var currSensorId = (observationTag[0].innerHTML.split(',')[0]).split('::')[1];
+          var sensorValues = observationTag[0].innerHTML.split(',')[1];
+          stnReading.push(sensorValues)
+
+          stnId.push(currStnId)
+          sensorId.push(currSensorId)
+          //console.log((observationTag[0].innerHTML.split(',')[0]).split('::')[0])
+          $('#table_data').append('<tr id=\'' + currStnId + '\' onclick=highlightMarker(this)><td>' + currStnId + '</td><td>' + sensorTypeMap[currSensorId] + '</td><td>' + sensorValues + '</td></tr>');
+
+        }
+      }
     });
-    //console.log("Active Stations", activeStations)
-    for (i=0;i<activeStations.length;i++){
-      obs_url = analytics_url+'&offering=urn:ioos:station:wmo:'+activeStations[i]+'&observedproperty='+selectedVal+'&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
-      $('#table_data').html("");
-      $.ajax({
-        url: obs_url,
-        datatype: 'text',
-        beforeSend: function() {
-                $('#chartPropSelect').css('background', 'url(https://digitalsynopsis.com/wp-content/uploads/2016/06/loading-animations-preloader-gifs-ui-ux-effects-28.gif) no-repeat center');
-                $(".node_data_table").addClass('load');
-        },
-        success: function(result){
-          //console.log(result)
-          temporalXML = StringToXMLDom(result);
-          //console.log(temporalXML)
-          //Change it for corresponding station by including the station id
-          //var observationTag = result.getElementsByTagName('om:Observation')[2]
-          var observationTag = result.getElementsByTagName('swe2:values')
-          var currStnId = (observationTag[0].innerHTML.split(',')[0]).split('::')[0]
-          var currSensorId = (observationTag[0].innerHTML.split(',')[0]).split('::')[1]
-          //console.log("Obversation Tag", observationTag[0])
-          // var observationList = observationTag.children[5];
-          // console.log(observationList)
-          
-          //console.log(sensorValues.innerHTML.split(',')[1])
-          
-          if (typeof(observationTag[0]) != 'undefined'){
-            //console.log("Obversation Tag", observationTag[0])
-            var sensorValues = observationTag[0].innerHTML.split(',')[1];
-            stnReading.push(sensorValues)
+  }
 
-            stnId.push(currStnId)
-            sensorId.push(currSensorId)
-            //console.log((observationTag[0].innerHTML.split(',')[0]).split('::')[0])
-            $('#table_data').append('<tr id=\'row_'+
-              currStnId+'\' onclick=highlightMarker(this)><td>'
-              +currStnId
-              +'</td><td>'+currSensorId
-              +'</td><td>'+sensorValues+'</td></tr>');
+  // console.log("Station Id", stnId)
+  // console.log("Station Reading", stnReading)
 
-          }
-        }
-      });
-    }   
-    
-    //Jquery table access method
-    // $("#dataTable tbody").click(function(){
-    //   //currow denotes the current row
-    //   var currow = $(this).closest('tr')
-    //   console.log("Currow", currow)
-    //   var col = currow.find('td:eq(0)').text();
-    //   console.log("Col", col)
-    //   //value denotes the station Id of the selected row
-    //   var value  = currow.context.firstChild.children[0].innerHTML.split(':')[4]
-    //   for (i=0; i<stationCount-1; i++){
-    //     if (stationArray[i].marker.options.stationID == value){
-    //       console.log("Value", value)
-    //     }
-    //   }
-    // });
-    console.log("Station Id", stnId)
-    console.log("Station Reading", stnReading)     
-    
-    //Update Table values
-    //$('.table_data').append('<tr><td>'+activeStations[i]+'</td><td>'+sensorId[i]+'</td><td>'+sensorValues+'</td></tr>');
-    var trace1 = ({
-        x: stnId,
-        y: stnReading,
-        type: 'lines',
-      });
-    var data = [trace1]
-      //$('.table_data').append('<tr><td>'+stnId+'</td><td>'+sensorId+'</td><td>'+dateTime+'</td><td>'+sensorReading+'</td></tr>');
-    //$(".node_data_table").removeClass('load');
-      
-    var layout = {
-        title: 'Variation of '+obsPropMap[selectedVal]+' With Time',
-        autoSize:'False', 
-        xaxis: {
-          title: 'Timestamp',
-          titlefont: {
-            family: 'Courier New, monospace',
-            size: 8,
-            color: '#000000'
-          }
-        },
-        yaxis: {
-          title: obsPropMap[selectedVal],
-          titlefont: {
-            family: 'Courier New, monospace',
-            size: 8,
-            color: '#000000'
-          }
-        }
-      };
-    
-    Plotly.newPlot('chart', data, layout)
-    //$.plot($("#chart"), [[stnId],[stnReading]], { yaxis: { max: 1 } });
-    // d1 = [stnId, stnReading]
-    // $.plot("#chart", [{
-    //   data: d1,
-    //   lines: { show: true, fill: true }}, ]);
-     console.log("Chart Displayed")
-};  
+  var trace1 = ({x: stnId, y: stnReading, type: 'lines'});
+  var data = [trace1]
 
-$('#chartPropSelect').on('change', function() {
+  var layout = {
+    title: 'Variation of ' + obsPropMap[selectedVal] + ' With Time',
+    autoSize: 'False',
+    xaxis: {
+      title: 'Timestamp',
+      titlefont: {
+        family: 'Courier New, monospace',
+        size: 8,
+        color: '#000000'
+      }
+    },
+    yaxis: {
+      title: obsPropMap[selectedVal],
+      titlefont: {
+        family: 'Courier New, monospace',
+        size: 8,
+        color: '#000000'
+      }
+    }
+  };
+
+  Plotly.newPlot('chart', data, layout)
+  // console.log("Chart Displayed")
+};
+
+
+
+$('#propSelect').on('change', function() {
   refreshChartTable()
 });
 
-function highlightMarker(elem) {
-  console.log("Elem", elem)
-  var selRowStnId = elem.children[0].innerHTML.split(':')[4]
-  console.log(selRowStnId)
-  for (i=0; i<stationCount - 1; i++){
-    if (stationArray[i].marker.options.stationID == selRowStnId){
-      console.log(i)
-      console.log(stationArray[i].marker.getLatLng())
-      var iconLatLng = [stationArray[i].marker.getLatLng()];
-      //L.marker([iconLatLng[0].lat, iconLatLng[0].lng], {icon:highlightIcon}).addTo(map).bindPopup("I am Station "+selRowStnId);
-      var markerBounds = L.latLngBounds(iconLatLng);
-      map.fitBounds(markerBounds);
-    }  
-  }
-};
 
 // function resetMarkers() {
 //   for (i = 0; i < stationCount - 1; i++) {
@@ -463,14 +431,11 @@ map.on('draw:created', function(e) {
   if (type === 'rectangle') {
     bb = layer.getLatLngs();
     var currBb = document.getElementById("bb");
-    // Code for Spatial Filter
     for (var i = 0; i < stationCount - 1; i++) {
       latlong = [stationArray[i].marker.getLatLng()];
       if (!(latlong[0].lat < bb[0][1].lat && latlong[0].lng > bb[0][1].lng && latlong[0].lat > bb[0][3].lat && latlong[0].lng < bb[0][3].lng)) {
-        // stationArray[i].marker.options.enabled = false;
         spatialGroup.removeLayer(stationArray[i].marker);
       } else {
-        // stationArray[i].marker.options.enabled = true;
         spatialGroup.addLayer(stationArray[i].marker);
       }
     }
@@ -488,13 +453,13 @@ L.Control.RemoveAll = L.Control.extend({
     var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
     L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation).addListener(controlDiv, 'click', L.DomEvent.preventDefault).addListener(controlDiv, 'click', function() {
       drawnItems.clearLayers();
-    for(var i=0;i<stationCount-1;i++) {
-      if(!spatialGroup.hasLayer(stationArray[i].marker)) {
-        spatialGroup.addLayer(stationArray[i].marker);
+      for (var i = 0; i < stationCount - 1; i++) {
+        if (!spatialGroup.hasLayer(stationArray[i].marker)) {
+          spatialGroup.addLayer(stationArray[i].marker);
+        }
       }
-    }
-    refreshDisplay();
-    refreshChartTable();
+      refreshDisplay();
+      refreshChartTable();
     });
     var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
     controlUI.title = 'Remove All Polygons';
@@ -504,25 +469,6 @@ L.Control.RemoveAll = L.Control.extend({
 });
 var removeAllControl = new L.Control.RemoveAll();
 map.addControl(removeAllControl);
-
-// L.Control.PropChange = L.Control.extend({
-//   options: {
-//     position: 'bottomleft'
-//   },
-//   onAdd: function(map) {
-//     var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
-//     L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation).addListener(controlDiv, 'click', L.DomEvent.preventDefault).addListener(controlDiv, 'click', function() {
-//       drawnItems.clearLayers();
-//       resetMarkers();
-//     });
-//     var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
-//     controlUI.title = 'Remove All Polygons';
-//     controlUI.href = '#';
-//     return controlDiv;
-//   }
-// });
-// var PropChangeFilter = new L.Control.PropChange();
-// map.addControl(PropChangeFilter);
 
 L.Control.TemporalControl = L.Control.extend({
   options: {
@@ -682,10 +628,10 @@ function propertyFiltering(prop) {
     }
   } else {
     for (i = 0; i < stationCount - 1; i++) {
-      if(!propGroup.hasLayer(stationArray[i].marker))
-      propGroup.addLayer(stationArray[i].marker);
+      if (!propGroup.hasLayer(stationArray[i].marker))
+        propGroup.addLayer(stationArray[i].marker);
+      }
     }
-  }
   refreshDisplay();
   refreshChartTable();
 };
@@ -771,8 +717,6 @@ $.ajax({
     // console.log(maxDate);
     // console.log(minDate.format('LLLL'), maxDate.format('LLLL'))
     map.addLayer(stationGroups);
-    refreshDisplay();
-    refreshChartTable();
 
     L.control.temporalController = function(id, options) {
       return new L.Control.TemporalControl(id, options);
@@ -790,6 +734,9 @@ $.ajax({
     map.addControl(sliderControl);
 
     sliderControl.startSlider();
+    refreshDisplay();
+    refreshChartTable();
+    map.on("moveend zoomend", refreshChartTable);
   },
   error: function(xhr, staus, error) {
     console.log('error in ajax', status, error);
