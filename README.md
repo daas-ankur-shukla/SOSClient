@@ -1,25 +1,15 @@
-# SOSClient
-GNR629 Project 2
+# SOSClient for NDBC Service
 
-Project 2:
+This project is a course project undertaken for GNR 629 Interoperability, Knowledge Discovery course under [Prof. S. Durbha](http://www.csre.iitb.ac.in/~sdurbha/) at [CSRE, IIT Bombay](http://www.csre.iitb.ac.in).
+The project aims to develop a Sensor Observation Service for National Data Buoy Service using pure Javascript and Material UI.
 
-- [ ] Register a sensor, see which tables have been populated and why
-- [ ] Run a query and see the results
-- [ ] Use the schema for getcapabilities and the database to populate getcapabilities
-- [ ] Have Tabs - SOS
-- [ ] URL - local 52 north service url
-- [ ] when getcapabilities request is sent, the following shud be populated: offerings, stations, spatial & temporal subsettings, comparison filtering (atleast 1 from each),
-- [X] sensors shud be displayed on the map with clickable pointers (click shud show describe sensors xml with result tab)
-- [ ] for spatial subsetting and temporal subsetting user shud be able to choose bounding box, morning ot evening time
-- [ ] temporal subsetting: <, >, < >
-- [ ] client shud be able to send xml queries/requests (soap)
-- [ ] spatial subsetting shud be done using mouse dragging
-- [ ] client shud be able to display data in a table. parse xml reponses in tables also.
+The following features have been implemented in the client:
 
-**Bonus Tasks**
+- Spatial Filtering: using leaflet draw plugin for drawing a bounding box to select stations.
+- Temporal Filtering: for filtering stations based on the duration of their operation.
+- Property Filtering: for filtering stations based on the reading they are capable of giving.
+- All the above filters are capable of working in parallel, thus providing spatio-temporal-property fitlering simultaneously for enhanced filtering.
+- Selected readings have also been visualized using Gaugejs library to render an animated gauge dynamically.
+- Interactive tables and graphs have also been presented to the user for better visual understanding of the readings provide by the stations.
 
-- [ ] clicking on the table interactive so that when a record is clicked the coressponding sensor is highighted -
-- [ ] data visualization from table.
-- [ ] also show current data in form of dials
-- [ ] connect real time sensor source to postgis data
-- [ ] implement multithreading
+This repository is under development and has commits from [Ankur Shukla](https://github.com/daas-ankur-shukla/) & [Rajat Shinde](https://github.com/omshinde/)
