@@ -736,6 +736,7 @@ $.ajax({
     sliderControl.startSlider();
     refreshDisplay();
     refreshChartTable();
+    
     map.on("moveend zoomend", refreshChartTable);
   },
   error: function(xhr, staus, error) {
