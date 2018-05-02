@@ -8,6 +8,7 @@ var markerJSON
 var stationCount
 var stationArray = [];
 
+var boundedStations = L.markerClusterGroup();
 var spatialGroup = L.markerClusterGroup();
 var temporalGroup = L.markerClusterGroup();
 var propGroup = L.markerClusterGroup();
@@ -126,7 +127,8 @@ const subPropArray = [
   'sea_water_speed',
   'sea_surface_wind_wave_significant_height',
   'wind_speed'
-]
+];
+
 const subPropRange = {
   'sea_floor_depth_below_sea_surface': [
     0, 10994, 'Meters'
@@ -150,10 +152,21 @@ const subPropRange = {
     0, 20.1, 'Meters'
   ],
   'wind_speed': [0, 54, 'km/h']
-}
+};
+
+const sensorTypeMap = {
+  'tsunameter0': 'Tsunameter',
+  'baro1': 'Barometer',
+  'watertemp1': 'Water Temperature',
+  'airtemp1': 'Air Temperature',
+  'anemometer1': 'Anemometer',
+  'anemometer2': 'Anemometer',
+  'wpm1': 'WPM'
+};
+
 function isInArray(value, array) {
   return array.indexOf(value) > -1;
-}
+};
 
 var stationMarker
 var map = L.map('map', {minZoom: 1}).setView([
@@ -239,7 +252,7 @@ function describeStation(stationXML, stationID, propList, popup) {
         }
         // console.log(gaugeArray);
         // console.log(gaugeArray[1]==0, !isNaN(gaugeArray[1]), gaugeArray[1]!='');
-        if (gaugeArray[1]==0 || (!isNaN(gaugeArray[1]) && gaugeArray[1] != '')) {
+        if (gaugeArray[1] == 0 || (!isNaN(gaugeArray[1]) && gaugeArray[1] != '')) {
           var toastHTML = '<div><p style="color:black;">' + displaySubProp + '</p></div><div><canvas id="gauge"></canvas></div>';
           M.toast({html: toastHTML, classes: 'rounded, white'});
           var targetCanvas = document.getElementById('gauge');
@@ -261,7 +274,6 @@ function describeStation(stationXML, stationID, propList, popup) {
         toastInstance.dismiss();
       }
     }
-
   });
 }
 
@@ -278,7 +290,122 @@ function refreshDisplay() {
     }
   }
   stationGroups.refreshClusters();
+
+  //console.log("Station Group", stationGroups)
+  //console.log("Station Array", stationArray)
 };
+
+
+function highlightMarker(elem) {
+  var selRowStnId = elem.children[0].innerHTML;
+  var zoom = 5;
+  for (i = 0; i < stationCount - 1; i++) {
+    if (stationArray[i].marker.options.stationID == selRowStnId) {
+      var iconLatLng = [stationArray[i].marker.getLatLng()];
+      map.flyTo([iconLatLng[0].lat, iconLatLng[0].lng], zoom);
+      // stationArray[i].marker.openPopup();
+    }
+  }
+};
+
+function refreshChartTable() {
+  var stnReading = [];
+  var sensorId = []
+  var stnId = []
+  var traces = [];
+  var analytics_url = 'https://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0'
+  var selectedVal = $('#propSelect').val();
+  if (selectedVal == 'RESET') {
+    selectedVal = 'sea_floor_depth_below_sea_surface'
+  }
+  //boundedStations: Array to store the current number of stations visible on the map
+
+  bounds = map.getBounds();
+  stationGroups.eachLayer(function(layer) {
+    if (bounds.contains(layer.getLatLng())) {
+      //console.log(layer.options.stationID)
+      boundedStations.addLayer(layer);
+    } else {
+      boundedStations.removeLayer(layer);
+    }
+  });
+
+  boundedStations.eachLayer(function(layer) {
+    obs_url = analytics_url + '&offering=urn:ioos:station:wmo:' + layer.options.stationID + '&observedproperty=' + selectedVal + '&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
+    $('#table_data').html("");
+    $.ajax({
+      url: obs_url,
+      datatype: 'text',
+      beforeSend: function() {
+        $('#propSelect').css('background', 'url(https://digitalsynopsis.com/wp-content/uploads/2016/06/loading-animations-preloader-gifs-ui-ux-effects-28.gif) no-repeat center');
+        $(".node_data_table").addClass('load');
+      },
+      success: function(result) {
+        temporalXML = StringToXMLDom(result);
+        var observationTag = result.getElementsByTagName('swe2:values')
+
+        if (typeof(observationTag[0]) != 'undefined') {
+          var currStnId = (observationTag[0].innerHTML.split(',')[0]).split('::')[0].split(':').pop();
+          var currSensorId = (observationTag[0].innerHTML.split(',')[0]).split('::')[1];
+          var sensorValues = observationTag[0].innerHTML.split(',')[1];
+          stnReading.push(sensorValues)
+
+          stnId.push(currStnId)
+          sensorId.push(currSensorId)
+          $('#table_data').append('<tr id=\'' + currStnId + '\' onclick=highlightMarker(this)><td>' + currStnId + '</td><td>' + sensorTypeMap[currSensorId] + '</td><td>' + sensorValues + '</td></tr>');
+
+        }
+      }
+    });
+  });
+
+  var data = [({x: stnId, y: stnReading, type: 'points'})];
+
+  var layout = {
+    title: 'Variation of ' + obsPropMap[selectedVal] + ' With Time',
+    autoSize: 'False',
+    xaxis: {
+      title: 'Timestamp',
+      titlefont: {
+        family: 'Courier New, monospace',
+        size: 8,
+        color: '#000000'
+      }
+    },
+    yaxis: {
+      title: obsPropMap[selectedVal],
+      titlefont: {
+        family: 'Courier New, monospace',
+        size: 8,
+        color: '#000000'
+      }
+    }
+  };
+
+  Plotly.newPlot('chart', data, layout);
+  Plotly.relayout('chart', {
+            'xaxis.autorange': true,
+            'yaxis.autorange': true
+        });
+  // console.log("Chart Displayed")
+};
+
+
+
+$('#propSelect').on('change', function() {
+  refreshChartTable()
+});
+
+
+// function resetMarkers() {
+//   for (i = 0; i < stationCount - 1; i++) {
+//     stationArray[i].marker.options.enabled = true;
+//     if (!stationGroups.hasLayer(stationArray[i].marker)) {
+//       stationGroups.addLayer(stationArray[i].marker);
+//     }
+//   }
+//   stationGroups.refreshClusters();
+// }
 
 var bb;
 var drawnItems = new L.FeatureGroup();
@@ -307,18 +434,16 @@ map.on('draw:created', function(e) {
   if (type === 'rectangle') {
     bb = layer.getLatLngs();
     var currBb = document.getElementById("bb");
-    // Code for Spatial Filter
     for (var i = 0; i < stationCount - 1; i++) {
       latlong = [stationArray[i].marker.getLatLng()];
       if (!(latlong[0].lat < bb[0][1].lat && latlong[0].lng > bb[0][1].lng && latlong[0].lat > bb[0][3].lat && latlong[0].lng < bb[0][3].lng)) {
-        // stationArray[i].marker.options.enabled = false;
         spatialGroup.removeLayer(stationArray[i].marker);
       } else {
-        // stationArray[i].marker.options.enabled = true;
         spatialGroup.addLayer(stationArray[i].marker);
       }
     }
     refreshDisplay();
+    refreshChartTable();
   }
   drawnItems.addLayer(layer);
 });
@@ -337,6 +462,7 @@ L.Control.RemoveAll = L.Control.extend({
         }
       }
       refreshDisplay();
+      refreshChartTable();
     });
     var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
     controlUI.title = 'Remove All Polygons';
@@ -398,6 +524,7 @@ L.Control.TemporalControl = L.Control.extend({
       }
     }
     refreshDisplay();
+    refreshChartTable();
     $('#leaflet-slider').remove();
   },
 
@@ -420,7 +547,6 @@ L.Control.TemporalControl = L.Control.extend({
         var dateValMax = moment(_options.maxDate);
         var tempMin;
         var tempMax;
-        // console.log(ui.handleIndex)
         if (ui.handleIndex) {
           // console.log('2nd moving')
           tempMin = moment(dateValMin);
@@ -442,6 +568,7 @@ L.Control.TemporalControl = L.Control.extend({
             }
           }
           refreshDisplay();
+          refreshChartTable();
         } else {
           var dateValMin = moment(_options.minDate);
           var dateValMax = moment(_options.maxDate);
@@ -463,6 +590,7 @@ L.Control.TemporalControl = L.Control.extend({
             }
           }
           refreshDisplay();
+          refreshChartTable();
         }
       }
     });
@@ -503,11 +631,12 @@ function propertyFiltering(prop) {
     }
   } else {
     for (i = 0; i < stationCount - 1; i++) {
-      if(!propGroup.hasLayer(stationArray[i].marker))
-      propGroup.addLayer(stationArray[i].marker);
+      if (!propGroup.hasLayer(stationArray[i].marker))
+        propGroup.addLayer(stationArray[i].marker);
+      }
     }
-  }
   refreshDisplay();
+  refreshChartTable();
 };
 
 var propSelectorControl = L.control({position: 'bottomleft'});
@@ -591,7 +720,6 @@ $.ajax({
     // console.log(maxDate);
     // console.log(minDate.format('LLLL'), maxDate.format('LLLL'))
     map.addLayer(stationGroups);
-    refreshDisplay();
 
     L.control.temporalController = function(id, options) {
       return new L.Control.TemporalControl(id, options);
@@ -609,6 +737,9 @@ $.ajax({
     map.addControl(sliderControl);
 
     sliderControl.startSlider();
+    refreshDisplay();
+    refreshChartTable();
+    map.on("moveend zoomend", refreshChartTable);
   },
   error: function(xhr, staus, error) {
     console.log('error in ajax', status, error);
