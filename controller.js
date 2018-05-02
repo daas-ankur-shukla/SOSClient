@@ -329,7 +329,7 @@ function refreshChartTable() {
       boundedStations.removeLayer(layer);
     }
   });
-  // for (var i = 0; i < boundedStations.length; i++) {
+
   boundedStations.eachLayer(function(layer) {
     obs_url = analytics_url + '&offering=urn:ioos:station:wmo:' + layer.options.stationID + '&observedproperty=' + selectedVal + '&responseformat=text/xml;subtype=%22om/1.0.0%22&eventtime=latest'
     $('#table_data').html("");
@@ -352,7 +352,6 @@ function refreshChartTable() {
 
           stnId.push(currStnId)
           sensorId.push(currSensorId)
-          //console.log((observationTag[0].innerHTML.split(',')[0]).split('::')[0])
           $('#table_data').append('<tr id=\'' + currStnId + '\' onclick=highlightMarker(this)><td>' + currStnId + '</td><td>' + sensorTypeMap[currSensorId] + '</td><td>' + sensorValues + '</td></tr>');
 
         }
@@ -360,11 +359,7 @@ function refreshChartTable() {
     });
   });
 
-  // console.log("Station Id", stnId)
-  // console.log("Station Reading", stnReading)
-
-  var trace1 = ({x: stnId, y: stnReading, type: 'lines'});
-  var data = [trace1]
+  var data = [({x: stnId, y: stnReading, type: 'points'})];
 
   var layout = {
     title: 'Variation of ' + obsPropMap[selectedVal] + ' With Time',
@@ -387,7 +382,11 @@ function refreshChartTable() {
     }
   };
 
-  Plotly.newPlot('chart', data, layout)
+  Plotly.newPlot('chart', data, layout);
+  Plotly.relayout('chart', {
+            'xaxis.autorange': true,
+            'yaxis.autorange': true
+        });
   // console.log("Chart Displayed")
 };
 
