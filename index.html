@@ -17,6 +17,27 @@
       background: #ffffff;
       color: #000000;
     }
+
+    tbody {
+      display: block;
+      height: 120px;
+      overflow: auto;
+    }
+
+    thead,
+    tbody tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    thead {
+      width: calc( 100% - 1em)
+    }
+
+    table {
+      width: 100%;
+    }
   </style>
 </head>
 
@@ -52,53 +73,29 @@
     <!-- <div id="gauges" class="col s2">
       <canvas id='he'></canvas>
     </div> -->
+    <!-- <div class="col s1"></div> -->
     <div id="viz" class="col s6">
-
-    </div>
-  </div>
-  <div class="row">
-    <div class="col s4 m8 offset-m2 l4">
-        <div class="card-panel grey lighten-5 z-depth-1">
-          <div class="row valign-wrapper">
-            <div class="col s2">
-              <img href="https://github.com/omshinde" src="https://github.com/daas-ankur-shukla/SOSClient/blob/master/images/rajat.jpg" alt="" class="circle responsive-img" width='30' height='30'> <!-- notice the "circle" class -->
-            </div>
-            <div class="col s10">
-              <span class="black-text">
-                Rajat Shinde
-              </span>
-            </div>
-          </div>
+      <div class="row">
+        <div id="table">
+          <table class="responsive-table highlight scrollable" id="dataTable">
+            <thead>
+              <tr>
+                <th>Station ID</th>
+                <th>Capabilities</th>
+                <th>Time Bounds</th>
+              </tr>
+            </thead>
+            <tbody id="table_data">
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="col s4 m8 offset-m2 l4">
-          <div class="card-panel grey lighten-5 z-depth-1">
-            <div class="row valign-wrapper">
-              <div class="col s2">
-                <img href="https://github.com/daas-ankur-shukla" src="https://github.com/daas-ankur-shukla/SOSClient/blob/master/images/ankur.jpg" alt="" class="circle responsive-img" width='30' height='30'> <!-- notice the "circle" class -->
-              </div>
-              <div class="col s10">
-                <span class="black-text">
-                  Ankur Shukla
-                </span>
-              </div>
-            </div>
-          </div>
+      <div class="row">
+        <div id="chart">
+          <h1>wlgnlrwgn</h1>
         </div>
-        <div class="col s4 m8 offset-m2 l4">
-            <div class="card-panel grey lighten-5 z-depth-1">
-              <div class="row valign-wrapper">
-                <div class="col s2">
-                  <img href="https://github.com/pan111" src="https://github.com/daas-ankur-shukla/SOSClient/blob/master/images/pankaj.png" alt="" class="circle responsive-img" width='30' height='30'> <!-- notice the "circle" class -->
-                </div>
-                <div class="col s10">
-                  <span class="black-text">
-                    Pankaj Tarone
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+      </div>
+    </div>
   </div>
   <script src="controller.js"></script>
 </body>
