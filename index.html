@@ -59,6 +59,27 @@
     table {
       width: 100%;
     }
+
+    tbody {
+      display: block;
+      height: 120px;
+      overflow: auto;
+    }
+
+    thead,
+    tbody tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    thead {
+      width: calc( 100% - 1em)
+    }
+
+    table {
+      width: 100%;
+    }
   </style>
 </head>
 
@@ -92,6 +113,32 @@
   </div>
   <div class="row">
     <div id="map" class="col s6 custom-popup"></div>
+    <!-- <div id="gauges" class="col s2">
+      <canvas id='he'></canvas>
+    </div> -->
+    <!-- <div class="col s1"></div> -->
+    <div id="viz" class="col s6">
+      <div class="row">
+        <div id="table">
+          <table class="responsive-table highlight scrollable" id="dataTable">
+            <thead>
+              <tr>
+                <th>Station ID</th>
+                <th>Capabilities</th>
+                <th>Time Bounds</th>
+              </tr>
+            </thead>
+            <tbody id="table_data">
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="row">
+        <div id="chart">
+          <h1>wlgnlrwgn</h1>
+        </div>
+      </div>
+    </div>
     <di v class="col s6">
       <div class="row">
         <table class="table highlight responsive-table scrollable" id="dataTable">

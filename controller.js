@@ -277,6 +277,35 @@ function describeStation(stationXML, stationID, propList, popup) {
   });
 }
 
+function highlightMarker(elem) {
+  var selRowStnId = elem.children[0].innerHTML;
+  var zoom = 5;
+  stationGroups.eachLayer(function(layer) {
+    if (layer.options.stationID == selRowStnId) {
+      var iconLatLng = [layer.getLatLng()];
+      map.flyTo([iconLatLng[0].lat, iconLatLng[0].lng], zoom);
+    }
+  });
+};
+
+function refreshTable() {
+  bounds = map.getBounds();
+  $('#table_data').html("");
+  stationGroups.eachLayer(function(layer) {
+    if (bounds.contains(layer.getLatLng())) {
+      endDate = ''
+      if(layer.options.endTime.format('LLLL') == 'Invalid date') {
+        endDate = 'Now'
+      } else {
+        endDate = layer.options.endTime.format('LLLL')
+      }
+      $('#table_data').append('<tr id=\'' + layer.options.stationID + '\' onclick=highlightMarker(this)><td>' + layer.options.stationID + '</td><td>' + layer.options.observedProps.map(function(element) {
+        return obsPropMap[element];
+      }).join(', ') + '</td><td>' + layer.options.beginTime.format('LLLL') + ' -- ' + endDate + '</td></tr>');
+    }
+  });
+}
+
 function refreshDisplay() {
   for (var i = 0; i < stationCount - 1; i++) {
     if (spatialGroup.hasLayer(stationArray[i].marker) && temporalGroup.hasLayer(stationArray[i].marker) && propGroup.hasLayer(stationArray[i].marker)) {
@@ -290,6 +319,7 @@ function refreshDisplay() {
     }
   }
   stationGroups.refreshClusters();
+  refreshTable();
 
   //console.log("Station Group", stationGroups)
   //console.log("Station Array", stationArray)
@@ -655,6 +685,7 @@ $('#propSelect').on('change', function() {
   propertyFiltering($('#propSelect').val())
 });
 
+
 $.ajax({
   url: ndbc_sos,
   dataType: 'text',
@@ -737,6 +768,8 @@ $.ajax({
     map.addControl(sliderControl);
 
     sliderControl.startSlider();
+    refreshTable();
+    map.on("moveend zoomend flyTo", refreshTable);
     refreshDisplay();
     refreshChartTable();
     map.on("moveend zoomend", refreshChartTable);
